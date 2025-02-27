@@ -39,7 +39,7 @@ jobs:
     - name: Check version
       run: |
         poetry version
-        poetry run python -c "import pypackage_template; print(pypackage_template.__version__)"
+        poetry run python -c "import your-package-name; print(your-package-name.__version__)"
 
     - name: Build package
       run: poetry build

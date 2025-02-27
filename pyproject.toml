@@ -1,13 +1,13 @@
 [tool.poetry]
-name = "pypackage_template"
+name = "your-package-name"
 version = "0.0.0"  # Placeholder for dynamic versioning
-description = "A fully featured Python package template that supports CI/CD, testing, and sphinx documentation"
-authors = ["Marcus Sherman <m.sherman@northeastern.edu>"]
+description = "Your package description that supports CI/CD, testing, and sphinx documentation"
+authors = ["Your Name <your.email@example.com>"]
 readme = "README.md"
-packages = [{include = "pypackage_template", from = "src"}]
+packages = [{include = "your-package-name", from = "src"}]
 license = "MIT"
 documentation = "https://pypackage-template.readthedocs.io"
-repository = "https://github.com/betteridiot/pypackage_template"
+repository = "https://github.com/your-github-username/your-package-name"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -22,12 +22,12 @@ classifiers = [
 ]
 
 [tool.poetry.urls]
-"Bug Tracker" = "https://github.com/betteridiot/pypackage_template/issues"
+"Bug Tracker" = "https://github.com/your-github-username/your-package-name/issues"
 "Documentation" = "https://pypackage-template.readthedocs.io"
-"Source Code" = "https://github.com/betteridiot/pypackage_template"
+"Source Code" = "https://github.com/your-github-username/your-package-name"
 
 [tool.poetry.scripts]
-pypackage_template = "pypackage_template.cli:main"
+your-package-name = "your-package-name.cli:main"
 run-checks = "scripts.run_checks:main"
 install-dev = "scripts.install_dev:main"
 
@@ -116,7 +116,7 @@ create = true
 [tool.pytest.ini_options]
 minversion = "7.0"
 addopts = """
-    --cov=src/pypackage_template \
+    --cov=src/your-package-name \
     --cov-report=term-missing \
     --cov-report=html \
     --cov-report=xml \
@@ -236,9 +236,9 @@ module = [
 ignore_missing_imports = true
 
 [tool.sphinx-pyproject]
-project = "pypackage_template"
+project = "your-package-name"
 copyright = "2025"
-author = "Marcus Sherman"
+author = "Your Name"
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
