@@ -9,9 +9,11 @@ import os
 
 import numpy as np
 
-import tools.toolbase
-from tools.celeryapp import logger
-from tools.celeryapp import celery
+# import tools.toolbase
+from plugins import celeryapp
+from plugins import Geneweavertoolbase
+logger = celeryapp.logger
+celery = celeryapp.celery
 
 
 def write_gs_to_tempfile(geneset):
@@ -34,7 +36,7 @@ def tsv_file_to_dict(path):
         d = {row[0]: row[1:][0].strip() for row in (line.split('\t') for line in tsv_file)}
     return d
 
-class MSET(tools.toolbase.GeneWeaverToolBase):
+class MSET(Geneweavertoolbase.GeneWeaverToolBase):
     name = "tools.MSET.MSET"
 
     def __init__(self, *args, **kwargs):

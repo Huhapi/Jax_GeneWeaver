@@ -20,6 +20,8 @@ jax-apiutils = "*"
 [tool.poetry.plugins."jax.ats.plugins"]
 
 "MSET" = "plugins.MSET.MSET:MSET"  # This is: path.to.file : class name
+"BooleanAlgebra" = "plugins.BooleanAlgebra.Boolean:BooleanAlgebra"  # This is: path.to.file : class name
+
 
 [build-system]
 
