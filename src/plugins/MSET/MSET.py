@@ -38,13 +38,17 @@ class MSETTask:
         group_1_genes = self.extract_genes_from_gw(content1)
         group_2_genes = self.extract_genes_from_gw(content2)
 
-        # print(group_1_genes)     
-        # print(group_2_genes)     
+        print(group_1_genes)     
+        print(group_2_genes)     
    
         list_1_pre = sorted(set(group_1_genes))
         list_2_pre = sorted(set(group_2_genes))
         
         # Use the background file if provided; otherwise, use the pre gene lists as background.
+
+
+        #check if they have same background after checking they dont need to do the intersection
+
         if background_genes is not None:
             list_1_background = background_genes
             list_2_background = background_genes
@@ -90,8 +94,9 @@ class MSETTask:
         
         # Sort trial results and count how many trials have an intersection size at least as high as observed.
         trials.sort()
+
         above = sum(1 for t in trials if t >= comp_intersect_size)
-        
+
         # Compute the p-value based on the representation type.
         if representation == "over":
             pvalue = above / float(num_trials)
@@ -136,9 +141,10 @@ class MSETTask:
     
     def extract_genes_from_gw(self, file_content: str) -> List[str]:
         """
-        need to make thi better        """
+        need to make thi better    
+                """
         genes = []
-        skip_chars = ("#", ":", "=", "+", "@", "%", "A", "!", "Q")
+        skip_chars = ("#", ":", "=", "+", "@", "%", "A", "!", "Q", )
         for line in file_content.splitlines():
             line = line.strip()
             if not line or line.startswith(skip_chars):
