@@ -3,6 +3,7 @@ import random
 from collections import Counter
 from dataclasses import dataclass
 from typing import Any, Dict, List
+import os
 
 # Define a simple Response dataclass to wrap the result.
 @dataclass
@@ -156,9 +157,9 @@ class MSETTask:
 
 if __name__ == "__main__":
     # Define your file paths.
-    file_path_1 = "/Users/kishan/Jax_GeneWeaver/src/plugins/MSET/RATUS1"
-    file_path_2 = "/Users/kishan/Jax_GeneWeaver/src/plugins/MSET/ratus2"
-    background_file_path = "/Users/kishan/Jax_GeneWeaver/src/plugins/MSET/KEGGRattusnorvegicusBG.txt"
+    file_path_1 = os.path.abspath("../Jax_GeneWeaver/src/plugins/MSET/RATUS1")
+    file_path_2 = os.path.abspath("../Jax_GeneWeaver/src/plugins/MSET/ratus2")
+    background_file_path = os.path.abspath("../Jax_GeneWeaver/src/plugins/MSET/KEGGRattusnorvegicusBG.txt")
     
     # Prepare the input data. Notice that we include the background_file_path.
     input_data = {
