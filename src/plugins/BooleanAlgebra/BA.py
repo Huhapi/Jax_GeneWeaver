@@ -7,6 +7,7 @@ from plugins.BooleanAlgebra import service
 from plugins import celeryapp as celery
 from plugins.GeneweaverToolBase import GeneWeaverToolBase
 class BooleanAlgebra(GeneWeaverToolBase):
+    
     # Name of the tool
     name = "BooleanAlgebra"
 
