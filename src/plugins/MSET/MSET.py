@@ -1,136 +1,163 @@
-#!/usr/bin/python
-# USAGE: JaccardClustering.py input.odemat < parameters_json.txt > output_json.txt 2>status.txt
-
-from subprocess import PIPE
-import subprocess
-import sys
-import tempfile
+import asyncio
+import random
+from collections import Counter
+from dataclasses import dataclass
+from typing import Any, Dict, List
 import os
 
-import numpy as np
+# Define a simple Response dataclass to wrap the result.
+@dataclass
+class Response:
+    result: Any
 
-import tools.toolbase
-from tools.celeryapp import logger
-from tools.celeryapp import celery
+class MSETTask:
+    async def run(self, input_data: Dict[str, Any]) -> Response:
 
-
-def write_gs_to_tempfile(geneset):
-    """
-    Save a geneset to a temporary file, and return the file object
-    :param geneset: tab separated list
-    :return: tempfile object
-    """
-    tmp = tempfile.NamedTemporaryFile(mode='w', delete=False)
-    umask = os.umask(0)
-    os.umask(umask)
-    os.chmod(tmp.name, 0o777 & ~umask)
-    for gene in geneset:
-        tmp.write(str(gene) + '\n')
-    tmp.close()
-    return tmp
-
-def tsv_file_to_dict(path):
-    with open(path, 'r') as tsv_file:
-        d = {row[0]: row[1:][0].strip() for row in (line.split('\t') for line in tsv_file)}
-    return d
-
-class MSET(tools.toolbase.GeneWeaverToolBase):
-    name = "tools.MSET.MSET"
-
-    def __init__(self, *args, **kwargs):
-        self.init("MSET")
-        self.urlroot=''
-        self.mset_dir = os.path.join('TOOLBOX', 'CS_Mset')
-        self.bg_dir = os.path.join(self.TOOL_DIR, self.mset_dir, 'backgroundFiles')
-        self.cpp_path = os.path.join(self.TOOL_DIR, self.mset_dir, 'MSETcpp')
-        self.curr_status="Initialized MSET"
-
-    async def run(self):
-        output_prefix = self._parameters["output_prefix"]
-        gs_dict = self._parameters["gs_dict"]
-        num_trials = self._parameters["MSET_NumberofSamples"]
-
-        # Update tool progress
-        self.curr_status("Computing MSET...")
-
-        # Attempt to open the output file
-        try:
-            fout = open(output_prefix + ".txt", "w")
-            fout.close()
-        except IOError:
-            logger.error("Could not open output file.")
-            sys.stderr.write("Could not open file text.txt")
-            raise
-
-        list_1 = gs_dict.get("group_1_genes")
-        list_1_bg = gs_dict.get("group_1_background")
-        bg_1_file_base = os.path.join(self.bg_dir, str(list_1_bg))
-
-        list_2 = gs_dict.get("group_2_genes")
-        list_2_bg = gs_dict.get("group_1_background")
-        bg_2_file_base = os.path.join(self.bg_dir, str(list_2_bg))
-
-        if list_1 and list_2:
-            list_1_file = write_gs_to_tempfile(list_1)
-            list_2_file = write_gs_to_tempfile(list_2)
+        # Get parameters from input_data
+        num_trials = int(input_data.get("num_trials", 1000))
+        file_path_1 = input_data.get("file_path_1")
+        file_path_2 = input_data.get("file_path_2")
+        representation = input_data.get("representation", "over").lower()  # "over" or "under"
+        print_to_cli = input_data.get("print_to_cli", False)
+        
+        with open(file_path_1, "r") as f:
+            content1 = f.read()
+        with open(file_path_2, "r") as f:
+            content2 = f.read()
+        
+        # If a background file is provided, read it.
+        background_file_path = input_data.get("background_file_path")
+        if background_file_path:
+            with open(background_file_path, "r") as f:
+                background_content = f.read()
+            background_genes = sorted(set(self.extract_genes_from_gw(background_content)))
         else:
-            logger.error("MSET can't compare two lists of genes without being passed two lists of genes:")
-            logger.error("Attempted GS IDs: {} {}".format(gs_dict.get('group_1_gsid'), gs_dict.get('group_2_gsid')))
-            raise ValueError("Interest Genes and Top Genes are required")
+            background_genes = None
+        
+        # Extract gene lists from the file contents
+        group_1_genes = self.extract_genes_from_gw(content1)
+        group_2_genes = self.extract_genes_from_gw(content2)
 
-        # Build the CLI command to run MSET, first the location of the MSET program
-        func_call = self.cpp_path + " "
-        # First argument is the number of trials to perform
-        func_call += str(num_trials) + " "
-        # Next is the location of the group 1 file, and its background file
-        func_call += str(list_1_file.name) + " " + str(bg_1_file_base) + " "
-        # Then the location of the group 2 file, and its background file
-        func_call += str(list_2_file.name) + " " + str(bg_2_file_base) + " "
-        # Finally, we currently only support Over-representation, using "-U" instead would test for under-representation
-        func_call += "-O"
+        print(group_1_genes)     
+        print(group_2_genes)     
+   
+        list_1_pre = sorted(set(group_1_genes))
+        list_2_pre = sorted(set(group_2_genes))
+        
+        # Use the background file if provided; otherwise, use the pre gene lists as background.
 
-        print(func_call)
 
-        self._results["intersect_genes"] = np.intersect1d(list_1, list_2).tolist()
+        #check if they have same background after checking they dont need to do the intersection
 
-        try:
-            popen = subprocess.Popen([func_call], shell=True, stderr=PIPE)
-            returncode = popen.wait()
-        except Exception as e:
-            logger.error('There was a problem calling the MSET c++ code: {}'.format(e))
-            raise e
-
-        if returncode != 0:
-            logger.error('MSET failed and returned a non-zero code')
-            try:
-                error = popen.communicate()
-                logger.error('Process reports: {}'.format(error))
-                self._results['error'] = str(error)
-            except IOError as e:
-                logger.error('There was a problem writing MSET errors to file: {}'.format(e))
-                raise e
+        if background_genes is not None:
+            list_1_background = background_genes
+            list_2_background = background_genes
         else:
-            logger.info('MSET completed successfully')
-            try:
-                mset_data = tsv_file_to_dict(self.OUTPUT_DIR + '/mset_output.tsv')
-                mset_hist = tsv_file_to_dict(self.OUTPUT_DIR + '/mset_hist.tsv')
-                self._results['mset_data'] = mset_data
-                self._results['mset_hist'] = mset_hist
+            list_1_background = list_1_pre
+            list_2_background = list_2_pre
+        
+        missing_genes = set(list_1_pre) - set(list_1_background)
+        # if missing_genes:
+            # print("These gensets are missing in the background")
+            # for gene in sorted(missing_genes):
+            #     # print(gene)
+            #     # print()
+        
+        # Compute the universe as the intersection of the two background sets
+        universe = sorted(set(list_1_background).intersection(list_2_background))
+        
+        # Filter the pre lists to include only genes that are in the universe
+        list_1 = sorted(set(list_1_pre).intersection(universe))
+        list_2 = sorted(set(list_2_pre).intersection(universe))
+        print(list_1)
+        print(list_2)
 
-            except Exception as e:
-                logger.error('There was a problem writing MSET results to a file: {}'.format(e))
-                raise e
+        # Calculate sizes and the observed intersection size
+        list_1_size = len(list_1)
+        list_2_size = len(list_2)
+        universe_size = len(universe)
+        comp_intersect_size = len(set(list_1).intersection(list_2))
+        
+        # # Verify that the pre lists are subsets of their backgrounds
+        # if not set(list_2_pre).issubset(set(list_2_background)):
+        #     return Response(result="Error: list_2 not subset of its background")
+        # if not set(list_1_pre).issubset(set(list_1_background)):
+        #     return Response(result="Error: list_1 not subset of its background")
+        
+        # Run simulation trials: randomly sample genes from the universe and count intersection sizes.
+        trials: List[int] = []
+        for _ in range(num_trials):
+            sample1 = set(random.sample(universe, list_1_size))
+            sample2 = set(random.sample(universe, list_2_size))
+            intersection_size = len(sample1.intersection(sample2))
+            trials.append(intersection_size)
+        
+        # Sort trial results and count how many trials have an intersection size at least as high as observed.
+        trials.sort()
 
-        list_1_file.delete()
-        list_2_file.delete()
+        above = sum(1 for t in trials if t >= comp_intersect_size)
 
-        self._results['gs_dict'] = gs_dict
-        self._results['gs_ids'] = self._gsids
-        self._results['gs_names'] = self._gsnames
-        self._results['parameters'] = self._parameters
+        # Compute the p-value based on the representation type.
+        if representation == "over":
+            pvalue = above / float(num_trials)
+            alternative = "Greater"
+            method = "Over"
+        elif representation == "under":
+            pvalue = (num_trials - above) / float(num_trials)
+            alternative = "Less"
+            method = "Under"
+        else:
+            return Response(result="Error: representation must be either 'over' or 'under'")
+        
+        # Create a histogram of the simulated intersection sizes.
+        hist = dict(Counter(trials))
+        
+        # Prepare the output dictionary.
+        mset_output = {
+            "List 1 Size": list_1_size,
+            "List 2 Size": list_2_size,
+            "Universe Size": universe_size,
+            "List 1 / Universe": list_1_size,
+            "List 2 / Universe": list_2_size,
+            "List 1/2 Intersect": comp_intersect_size,
+            "Num Trials": num_trials,
+            "Alternative": alternative,
+            "Method": method,
+            "Trials gt intersect": above,
+            "P-Value": pvalue
+        }
+        
+        # Optionally print the results to the CLI.
+        if print_to_cli:
+            print("\nMSET Output:")
+            for key, value in mset_output.items():
+                print(f"{key}: {value}")
+            print("\nHistogram:")
+            for key, value in sorted(hist.items()):
+                print(f"{key}: {value}")
+        
+        # Return the computed results.
+        return Response(result={"mset_output": mset_output, "histogram": hist})
+    
+    def extract_genes_from_gw(self, file_content: str) -> List[str]:
+        """
+        need to make thi better    
+                """
+        genes = []
+        skip_chars = ("#", ":", "=", "+", "@", "%", "A", "!", "Q", )
+        for line in file_content.splitlines():
+            line = line.strip()
+            if not line or line.startswith(skip_chars):
+                continue
+            gene = line.split()[0]
+            genes.append(gene)
+        return genes
+    
+    def status(self) -> Response:
 
-    def status(self):
-        return self.curr_status
+        @dataclass
+        class Status:
+            percent_complete: int
+        return Response(result=Status(percent_complete=100))
 
 
-MSET = celery.register_task(MSET())
