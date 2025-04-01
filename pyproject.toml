@@ -16,6 +16,7 @@ packages = [{ include = "plugins", from = "src" }]
 python = "^3.10"
 
 jax-apiutils = "*"
+pyyaml = "^6.0.2"
 
 [tool.poetry.plugins."jax.ats.plugins"]
 

@@ -26,7 +26,8 @@ class implement_plugins():
             # elif input.get("tool type") == 'Boolean Algebra':
             #     pass
             #     #return PluginB(input)
-            with open("../tools.yaml","r") as file:
+            tools_yaml_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tools.yaml")
+            with open(tools_yaml_path, "r") as file:
                 config=yaml.safe_load(file)
             print(config)
             className=config["tools"].get(input.get("tool type"))
