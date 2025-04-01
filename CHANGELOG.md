@@ -5,3 +5,4 @@ Anushka Doshi - Utils setup
 Anushka Doshi - Code for fetching restAPI responses
 Kishan - Updated ATS_plugin -file call to work for each OS
        - added ymal dependecy to poetry env
+Kishan - Adjust ATS_Plugin test and files to integration test folder
