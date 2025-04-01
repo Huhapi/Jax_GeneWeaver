@@ -3,14 +3,16 @@ import random
 from collections import Counter
 from dataclasses import dataclass
 from typing import Any, Dict, List
+from ATS import ATS_Plugin
 import os
+
 
 # Define a simple Response dataclass to wrap the result.
 @dataclass
 class Response:
     result: Any
 
-class MSETTask:
+class MSETTask(ATS_Plugin.implement_plugins):
     async def run(self, input_data: Dict[str, Any]) -> Response:
 
         # Get parameters from input_data
