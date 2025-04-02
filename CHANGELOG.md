@@ -6,3 +6,5 @@ Anushka Doshi - Code for fetching restAPI responses
 Kishan - Updated ATS_plugin -file call to work for each OS
        - added ymal dependecy to poetry env
 Kishan - Adjust ATS_Plugin test and files to integration test folder
+Anushka & Harshit - Initial implementation of Boolean Algebra tool
+Harshit - Updated methods in service.py to use API instead of SQL database

@@ -18,5 +18,15 @@ def fetchGeneSets(geneSetID:int):
     dic=response.json()
     return parseGenesFromGeneSet(dic)
 
-
-
+def fetchSpecies():
+    url = 'https://geneweaver.jax.org/api/species'
+    headers = {
+        "Accept": "application/json"
+    }
+    response = requests.get(url, headers=headers)
+    species_data = response.json()['data']
+    result = []
+    for species in species_data:
+        if species['id'] != 0:
+            result.append((species['id'], species['name']))
+    return result

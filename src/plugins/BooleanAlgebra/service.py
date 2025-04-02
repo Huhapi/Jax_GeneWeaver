@@ -2,68 +2,85 @@
 Service namespace for the Boolean Algebra tool
 """
 import collections
-
-SELECT_ALL_SPECIES_SQL = '''SELECT sp_id, sp_name FROM odestatic.species WHERE sp_id != 0'''
-
-
-def get_all_geneweaver_species(cursor):
-    """
-
-    :return: list of tuples sp_id, sp_name
-    """
-    # TODO: Use sqlalchemy for this relation
-    cursor.execute(SELECT_ALL_SPECIES_SQL)
-    result = cursor.fetchall()
-    cursor.close()
-    return result
+from src.utils.geneSetRestAPI import fetchGeneSets, fetchSpecies
 
 
-def get_all_geneweaver_species_for_boolean(cursor):
+# def get_all_geneweaver_species(cursor):
+#     """
+
+#     :return: list of tuples sp_id, sp_name
+#     """
+#     # TODO: Use sqlalchemy for this relation
+#     cursor.execute(SELECT_ALL_SPECIES_SQL)
+#     result = cursor.fetchall()
+#     cursor.close()
+#     return result
+def get_all_geneweaver_species():
+    return fetchSpecies()
+
+
+def get_all_geneweaver_species_for_boolean():
     all_species_short = {}
     all_species_full = {}
-    species = get_all_geneweaver_species(cursor)
-    for species in species:
+    species_data = fetchSpecies()
+    for species in species_data:
         all_species_short[species[0]] = "".join(item[0] for item in species[1].split())
         all_species_full[species[0]] = species[1]
     return all_species_short, all_species_full
 
 
-GET_HOMOLOGS_SQL = '''SELECT hom.hom_source_id, g.ode_gene_id, g.ode_ref_id, g.sp_id, gv.gs_id, gs.gs_abbreviation
-                            FROM gene g NATURAL JOIN geneset_value gv NATURAL
-                            JOIN geneset gs LEFT JOIN
-                              (SELECT ode_gene_id, hom_source_id 
-                                    FROM homology 
-                                    WHERE hom_source_name = 'Homologene' 
-                                    AND hom_source_id IN
-                                      (SELECT hom_source_id 
-                                          FROM homology h, geneset_value gv2
-                                          WHERE h.ode_gene_id = gv2.ode_gene_id
-                                          AND gv2.gs_id IN {0}
-                                      )
-                                    AND sp_id IN ({1})
-                              ) hom
-                              ON g.ode_gene_id = hom.ode_gene_id
-                            WHERE gv.gs_id IN {0}
-                            AND g.gdb_id = 7 
-                            AND g.ode_pref = TRUE
-                              ORDER BY hom.hom_source_id, gv.gs_id'''
+# GET_HOMOLOGS_SQL = '''SELECT hom.hom_source_id, g.ode_gene_id, g.ode_ref_id, g.sp_id, gv.gs_id, gs.gs_abbreviation
+#                             FROM gene g NATURAL JOIN geneset_value gv NATURAL
+#                             JOIN geneset gs LEFT JOIN
+#                               (SELECT ode_gene_id, hom_source_id 
+#                                     FROM homology 
+#                                     WHERE hom_source_name = 'Homologene' 
+#                                     AND hom_source_id IN
+#                                       (SELECT hom_source_id 
+#                                           FROM homology h, geneset_value gv2
+#                                           WHERE h.ode_gene_id = gv2.ode_gene_id
+#                                           AND gv2.gs_id IN {0}
+#                                       )
+#                                     AND sp_id IN ({1})
+#                               ) hom
+#                               ON g.ode_gene_id = hom.ode_gene_id
+#                             WHERE gv.gs_id IN {0}
+#                             AND g.gdb_id = 7 
+#                             AND g.ode_pref = TRUE
+#                               ORDER BY hom.hom_source_id, gv.gs_id'''
 
 
-def get_homologs_for_geneset(cursor, geneset_ids, species_ids=None):
-    """
+# def get_homologs_for_geneset(cursor, geneset_ids, species_ids=None):
+#     """
 
-    :param cursor:
-    :param geneset_ids:
-    :param species_ids:
-    :return:
-    """
-    species_ids = species_ids or get_species_in_genesets(cursor, geneset_ids)
-    sql = GET_HOMOLOGS_SQL.format(tuple(geneset_ids), ",".join(str(sid) for sid in species_ids))
-    cursor.execute(sql)
-    results = cursor.fetchall()
-    cursor.close()
-    return results
+#     :param cursor:
+#     :param geneset_ids:
+#     :param species_ids:
+#     :return:
+#     """
+#     species_ids = species_ids or get_species_in_genesets(cursor, geneset_ids)
+#     sql = GET_HOMOLOGS_SQL.format(tuple(geneset_ids), ",".join(str(sid) for sid in species_ids))
+#     cursor.execute(sql)
+#     results = cursor.fetchall()
+#     cursor.close()
+#     return results
 
+def get_homologs_for_geneset(geneset_ids, species_ids=None):
+    species_ids = species_ids or get_species_in_genesets(geneset_ids)
+    homolog_data = []
+    for gs_id in geneset_ids:
+        gene_data = fetchGeneSets(gs_id)
+        if 'homologs' in gene_data:
+            for homolog in gene_data['homologs']:
+                homolog_tuple = (
+                    homolog.get('hom_source_id'),
+                    homolog.get('ode_gene_id'),
+                    homolog.get('ode_ref_id'),
+                    homolog.get('sp_id'),
+                    gs_id
+                )
+                homolog_data.append(homolog_tuple)
+    return homolog_data
 
 def group_homologs(homologs, species_ids):
     """
@@ -99,21 +116,27 @@ def get_grouped_homologs_for_genesets(geneset_ids, species_ids=None, homolog_dat
     return group_homologs(homolog_data, species_ids)
 
 
-def get_species_in_genesets(cursor, geneset_ids):
-    """
-    Get a unique list of species ids found in the genesets ids provided
-    :param cursor:
-    :param geneset_ids:
-    :return:
-    """
-    species_ids = []
-    for g_id in geneset_ids:
-        cursor.execute('''SELECT DISTINCT sp_id FROM production.geneset WHERE gs_id=%s''' % g_id, )
-        res = cursor.fetchall()
-        for r in res:
-            species_ids.append(int(r[0]))
-    return list(set(species_ids))
+# def get_species_in_genesets(cursor, geneset_ids):
+#     """
+#     Get a unique list of species ids found in the genesets ids provided
+#     :param cursor:
+#     :param geneset_ids:
+#     :return:
+#     """
+#     species_ids = []
+#     for g_id in geneset_ids:
+#         cursor.execute('''SELECT DISTINCT sp_id FROM production.geneset WHERE gs_id=%s''' % g_id, )
+#         res = cursor.fetchall()
+#         for r in res:
+#             species_ids.append(int(r[0]))
+#     return list(set(species_ids))
 
+def get_species_in_genesets(geneset_ids):
+    species_ids = set()
+    for gs_id in geneset_ids:
+        gene_data = fetchGeneSets(gs_id)
+        species_ids.append(gene_data['species'])
+    return list(species_ids)
 
 def cluster_genes(homolog_data, species_ids):
     """
