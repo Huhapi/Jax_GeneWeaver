@@ -1,6 +1,7 @@
 from ATS.ATS_Plugin import implement_plugins
 import os
 
+
 if __name__ == "__main__":
     this_file = os.path.abspath(__file__)
     project_root = os.path.abspath(os.path.join(this_file, "..", "..", "..", ".."))
@@ -19,5 +20,5 @@ if __name__ == "__main__":
         "print_to_cli": True
     }
 
-    imp = implement_plugins()
-    imp.execute(input_data)
+    imp = implement_plugins(input_data)
+    print(imp.get_status())

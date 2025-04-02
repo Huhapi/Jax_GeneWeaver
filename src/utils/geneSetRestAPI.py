@@ -19,7 +19,4 @@ def fetchGeneSets(geneSetID:int):
     return parseGenesFromGeneSet(dic)
 
 
-if __name__=="__main__":
-    geneIds=fetchGeneSets(219249)
-    print("Geneset length: "+str(len(geneIds)))
-    print(geneIds)
+
