@@ -8,26 +8,25 @@ import importlib
 import asyncio
 
 class implement_plugins():
-    def __init__(self, input: Dict[str, Any]):
+    def __init__(self):
         self.instance = None
+
+    def execute(self,input):
         tools_yaml_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tools.yaml")
         with open(tools_yaml_path, "r") as file:
             config=yaml.safe_load(file)
-        print(config)
-        className=config["tools"].get(input.get("tool type")) # "tool type" in input dictionary determines tool selection
-        print(className)
+        tool_type = input.get("tool_type")
+        className=config["tools"].get(tool_type) # "tool type" in input dictionary determines tool selection
         if className:
             module_path, class_name = className.rsplit(".", 1)
             module = importlib.import_module(module_path)
             cls = getattr(module, class_name)
-            print(cls)
             if cls:
                 self.instance = cls()
-                print(self.instance)
                 result = asyncio.run(self.instance.run(input))
                 print(result)
         else:
-            raise ValueError(f"Unknown plugin type: {input.get("tool type")}")
+            raise ValueError(f"Unknown plugin type: {tool_type}")
     @abstractmethod
     def run(self, input_data: Dict[str, Any]):
         pass
@@ -40,6 +39,4 @@ class implement_plugins():
             return self.instance.status()
         else:
             return "Initializing" # This needs to be in JSON format
-
-
 

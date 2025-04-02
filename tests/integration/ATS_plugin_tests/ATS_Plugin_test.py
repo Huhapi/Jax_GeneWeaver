@@ -1,4 +1,4 @@
-from ATS.ATS_Plugin import implement_plugins
+from ATS import ATS_Plugin
 import os
 
 
@@ -12,7 +12,7 @@ if __name__ == "__main__":
     background_file_path = os.path.join(tests_dir, "KEGGRattusnorvegicusBG.txt")
 
     input_data = {
-        "tool type": "MSET",
+        "tool_type": "MSET",
         "num_trials": 1000,
         "file_path_1": file_path_1,
         "file_path_2": file_path_2,
@@ -20,5 +20,8 @@ if __name__ == "__main__":
         "print_to_cli": True
     }
 
-    imp = implement_plugins(input_data)
+    imp = ATS_Plugin.implement_plugins()
     print(imp.get_status())
+    imp.execute(input_data)
+    print(imp.get_status())
+    print(imp)
