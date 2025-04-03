@@ -1,5 +1,6 @@
 from ATS import ATS_Plugin
 import os
+from plugins.MSET import MSET
 
 
 if __name__ == "__main__":
@@ -21,7 +22,11 @@ if __name__ == "__main__":
     }
 
     imp = ATS_Plugin.implement_plugins()
-    print(imp.get_status())
-    imp.execute(input_data)
-    print(imp.get_status())
-    print(imp)
+    #print(imp.get_status())
+    plugins = imp.load_plugins()
+    for p in plugins:
+        if isinstance(p,MSET.MSETTask):
+            print("MSET comparison success.")
+    print(plugins)
+    #print(imp.get_status())
+    #print(imp)

@@ -4,8 +4,9 @@ Tool Class Definition for Boolean Algebra. See service.py for the heavy lifting.
 import json
 from plugins.BooleanAlgebra import service
 from plugins.GeneweaverToolBase import GeneWeaverToolBase
+from ATS import ATS_Plugin
 
-class BooleanAlgebra(GeneWeaverToolBase):
+class BooleanAlgebra(ATS_Plugin.implement_plugins):
     
     # Name of the tool
     name = "BooleanAlgebra"
