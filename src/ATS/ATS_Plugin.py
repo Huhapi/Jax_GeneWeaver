@@ -3,8 +3,6 @@
 # Add pyYAML to dependencies
 from typing import Any, Dict
 from abc import abstractmethod
-import os, yaml
-from plugins import MSET
 import importlib.metadata
 import asyncio
 
@@ -32,7 +30,7 @@ class implement_plugins():
                 print(f"Warning: {ep.name} does not conform to plugin interface.")
         return plugins
         
-    def execute(self):
+    def execute(self, input):
         """ This function executes the loading of the plugins and calls the one specified in the input.
         
         input: The JSON input from the frontend interface.
@@ -40,7 +38,7 @@ class implement_plugins():
         output: One of the return objects.
         """
         LOADED_PLUGINS = self.load_plugins()
-        
+
         # tools_yaml_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tools.yaml")
         # with open(tools_yaml_path, "r") as file:
         #     config=yaml.safe_load(file)
@@ -58,14 +56,16 @@ class implement_plugins():
         #     raise ValueError(f"Unknown plugin type: {tool_type}")
     @abstractmethod
     def run(self, input_data: Dict[str, Any]):
+        """ This function must be implemented by any plugin which inherets this class implement_plugins"""
         pass
     @abstractmethod
     def status(self):
+        """ This function must be implemented by any plugin which inherets this class implement_plugins"""
         pass
     # Get status class for front end interface call
     def get_status(self):
         if self.instance:
             return self.instance.status()
         else:
-            return "Initializing" # This needs to be in JSON format
+            return "Initializing" # This needs to be an error object.
 
