@@ -8,7 +8,7 @@ if __name__ == "__main__":
     # This fetches the current directory and backtracks the file paths from there, please dont modify 
     current_dir = os.path.dirname(__file__)
 
-    file_path_1 = os.path.join(current_dir, "RATUS1")  #
+    file_path_1 = os.path.join(current_dir, "RATUS1")  # 233106 • KEGG Geneset - "Apoptosis" pathway genes
     file_path_2 = os.path.join(current_dir, "ratus2")  # https://geneweaver.org/api/docs#/genesets/get_geneset_api_genesets__geneset_id__get 233325
     background_file_path = os.path.join(current_dir, "KEGGRattusnorvegicusBG.txt")
     
@@ -21,8 +21,6 @@ if __name__ == "__main__":
         # "representation": "over",  # Optional; if omitted, it defaults to "over"
         "print_to_cli": True
     }
-
-    
     
     # Create an instance of the plugin task and run it asynchronously.
     task = MSET.MSETTask()

@@ -3,8 +3,7 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import Any, Dict, List
 from ATS import ATS_Plugin
-import os
-
+from utils import fetchGeneSymbols_from_geneset
 
 # Define a simple Response dataclass to wrap the result.
 @dataclass
@@ -16,15 +15,33 @@ class MSETTask(ATS_Plugin.implement_plugins):
 
         # Get parameters from input_data
         num_trials = int(input_data.get("num_trials", 1000))
+        geneset_id_1 = input_data.get("geneset_id_1") # will be used if geneset ids are provided
+        geneset_id_2 = input_data.get("geneset_id_2") # will be used if geneset ids are provided
+
         file_path_1 = input_data.get("file_path_1")
         file_path_2 = input_data.get("file_path_2")
+        background_file_path = input_data.get("background_file_path")
+
+
         representation = input_data.get("representation", "over").lower()  # "over" or "under"
         print_to_cli = input_data.get("print_to_cli", False)
         
-        with open(file_path_1, "r") as f:
-            content1 = f.read()
-        with open(file_path_2, "r") as f:
-            content2 = f.read()
+        if geneset_id_1:
+            gene_list_1 = fetchGeneSymbols_from_geneset(geneset_id_1)
+        elif file_path_1:
+            with open(file_path_1, "r") as f:
+                content1 = f.read()
+        else:
+            return Response(result="Error: Provide either file_path_1 or geneset_id_1")
+
+        # Get content for group 2
+        if geneset_id_2:
+            gene_list_2 = fetchGeneSymbols_from_geneset(geneset_id_2)
+        elif file_path_2:
+            with open(file_path_2, "r") as f:
+                content2 = f.read()
+        else:
+            return Response(result="Error: Provide either file_path_2 or geneset_id_2")
         
         # If a background file is provided, read it.
         background_file_path = input_data.get("background_file_path")
@@ -38,13 +55,11 @@ class MSETTask(ATS_Plugin.implement_plugins):
         # Extract gene lists from the file contents
         group_1_genes = self.extract_genes_from_gw(content1)
         group_2_genes = self.extract_genes_from_gw(content2)
-
-        print(group_1_genes)     
-        print(group_2_genes)     
+    
    
         list_1_pre = sorted(set(group_1_genes))
         list_2_pre = sorted(set(group_2_genes))
-        
+        print(list_1_pre)
         # Use the background file if provided; otherwise, use the pre gene lists as background.
 
 
@@ -160,5 +175,3 @@ class MSETTask(ATS_Plugin.implement_plugins):
         class Status:
             percent_complete: int
         return Response(result=Status(percent_complete=100))
-
-
