@@ -1,12 +1,12 @@
 """
 Tool Class Definition for Boolean Algebra. See service.py for the heavy lifting.
 """
-
 import json
 from plugins.BooleanAlgebra import service
-from plugins import celeryapp as celery
 from plugins.GeneweaverToolBase import GeneWeaverToolBase
-class BooleanAlgebra(GeneWeaverToolBase):
+from ATS import ATS_Plugin
+
+class BooleanAlgebra(ATS_Plugin.implement_plugins):
     
     # Name of the tool
     name = "BooleanAlgebra"
@@ -68,9 +68,8 @@ class BooleanAlgebra(GeneWeaverToolBase):
         # Species for tool run
         species_in_genesets = service.get_species_in_genesets(self.db.cursor(), geneset_ids)
 
-        # Raw sql result
-        homolog_data = service.get_homologs_for_geneset(self.db.cursor(), geneset_ids, species_ids=species_in_genesets)
-        # Grouped result
+        # Get gene data
+        homolog_data = service.get_homologs_for_geneset(geneset_ids, species_ids=species_in_genesets)
         bool_results = service.group_homologs(homolog_data, species_in_genesets)
 
         # Geneset Ids returned in the query
@@ -126,5 +125,14 @@ class BooleanAlgebra(GeneWeaverToolBase):
 
     def status(self):
         return self.curr_status
+
+# if __name__ == "__main__":
     
-BooleanAlgebra = celery.register_task(BooleanAlgebra())
+#     tool = BooleanAlgebra()
+#     tool._parameters = {
+#         'BooleanAlgebra_Relation': 'intersect',
+#         'output_prefix': 'test_output',
+#         'at_least': 2
+#     }
+#     tool._gsids = ['GS1', 'GS2']  # Example gene set IDs
+#     tool.run()

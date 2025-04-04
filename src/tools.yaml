@@ -1,0 +1,3 @@
+tools:
+  MSET: plugins.MSET.MSET.MSETTask
+  Boolean: plugins.BooleanAlgebra.BA.BooleanAlgebra
