@@ -30,17 +30,6 @@ def parse_metadata(
 ):
     return LoadPluginModel(tool_type=tool_type, num_trials=num_trials, print_to_cli=print_to_cli)
 
-# @app.post("/upload/")
-# async def upload_file(
-#         file: UploadFile = File(...),
-#         metadata: FileMetadata = Depends(parse_metadata)
-# ):
-#     return {
-#         "filename": file.filename,
-#         "content_type": file.content_type,
-#         "metadata": metadata.dict()
-#     }
-
 
 @app.post("/")
 def read_root(input:LoadPluginModel):
