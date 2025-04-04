@@ -5,7 +5,7 @@ VALID_SPECIES_NAMES = [
     "Drosophila Melanogaster", "Macaca Mulatta", "Caenorhabditis Elegans",
     "Saccharomyces Cerevisiae", "Gallus Gallus", "Canis Familiaris",
     "Xenopus Tropicalis", "Xenopus Laevis"
-] # Referenced from the error resposnse message thorugh mapping API
+]
 
 def fetchGeneSymbols_from_geneset(geneset_id):
     geneset_data = get_geneset_data(geneset_id)
@@ -16,7 +16,14 @@ def fetchGeneSymbols_from_geneset(geneset_id):
         for item in geneset_data.get("object", {}).get("geneset_values", [])
     ]
     source_ids = [source_id for sublist in gsv_source_lists for source_id in sublist]
-    
+
+    # Check if source_ids are already gene symbols
+    all_look_like_symbols = all(not source_id.isnumeric() for source_id in source_ids)
+
+    if all_look_like_symbols:
+        return source_ids  # Directly return symbols, skip mapping
+
+    # Else, proceed with mapping
     species_name = get_species_name(species_id)
     gene_symbols = get_gene_symbols(source_ids, species_name)
     

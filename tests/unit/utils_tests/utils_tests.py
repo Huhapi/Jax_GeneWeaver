@@ -2,5 +2,5 @@
 from utils.geneSetRestAPI import fetchGeneSymbols_from_geneset
 
 if __name__=="__main__":
-    symbols=fetchGeneSymbols_from_geneset(356407) # https://www.geneweaver.org/viewgenesetdetails/219249
+    symbols=fetchGeneSymbols_from_geneset(233325) # https://www.geneweaver.org/viewgenesetdetails/219249
     print("Gene Symbols: ",((symbols)))
