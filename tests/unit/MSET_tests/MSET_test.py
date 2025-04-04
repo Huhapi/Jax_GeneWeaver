@@ -5,10 +5,12 @@ from plugins.MSET import MSET
 import os
 
 if __name__ == "__main__":
-    # Define your file paths.
-    file_path_1 = os.path.abspath("./RATUS1")
-    file_path_2 = os.path.abspath("../MSET_tests/ratus2")
-    background_file_path = os.path.abspath("../MSET_tests/KEGGRattusnorvegicusBG.txt")
+    # This fetches the current directory and backtracks the file paths from there, please dont modify 
+    current_dir = os.path.dirname(__file__)
+
+    file_path_1 = os.path.join(current_dir, "RATUS1")
+    file_path_2 = os.path.join(current_dir, "ratus2")
+    background_file_path = os.path.join(current_dir, "KEGGRattusnorvegicusBG.txt")
     
     # Prepare the input data. Notice that we include the background_file_path.
     input_data = {

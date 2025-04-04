@@ -1,7 +1,6 @@
 # Test section for utils, accessing genes from GeneWeaver ReST API
-from utils import geneSetRestAPI as ReSTAPI
+from utils.geneSetRestAPI import fetchGeneSymbols_from_geneset
 
 if __name__=="__main__":
-    geneIds=ReSTAPI.fetchGeneSets(219249)
-    print("Geneset length: "+str(len(geneIds)))
-    print(geneIds)
+    symbols=fetchGeneSymbols_from_geneset(356407) # https://www.geneweaver.org/viewgenesetdetails/219249
+    print("Gene Symbols: ",((symbols)))
