@@ -16,17 +16,18 @@ class implement_plugins():
         
         input: Nothing, but requires list of plugins with their position in the project in pypoetry.toml
 
-        returns: A list of loaded plugins.
+        returns: A dictionary of loaded plugins, the class name(as a string) of each as keys and class object as values.
         
         """
         entry_points = importlib.metadata.entry_points(group="jax.ats.plugins")
-        plugins = []
+        plugins = {}
         for ep in entry_points:
             plugin_cls = ep.load()
             plugin_instance = plugin_cls()
-            if isinstance(plugin_instance, implement_plugins): #implement_plugins is the interface for the plugins
-                plugins.append(plugin_instance)
+            if isinstance(plugin_instance, implement_plugins): #implement_plugins is our interface for the plugins
+                plugins[plugin_cls.__name__] = plugin_instance
             else:
+                # Potentially added to return object information
                 print(f"Warning: {ep.name} does not conform to plugin interface.")
         return plugins
         
@@ -35,25 +36,19 @@ class implement_plugins():
         
         input: The JSON input from the frontend interface.
 
-        output: One of the return objects.
+        output: One of the JSON return objects. Depending on success or failure.
         """
-        LOADED_PLUGINS = self.load_plugins()
 
-        # tools_yaml_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tools.yaml")
-        # with open(tools_yaml_path, "r") as file:
-        #     config=yaml.safe_load(file)
-        # tool_type = input.get("tool_type")
-        # className=config["tools"].get(tool_type) # "tool type" in input dictionary determines tool selection
-        # if className:
-        #     module_path, class_name = className.rsplit(".", 1)
-        #     module = importlib.import_module(module_path)
-        #     cls = getattr(module, class_name)
-        #     if cls:
-        #         self.instance = cls()
-        #         result = asyncio.run(self.instance.run(input))
-        #         print(result)
-        # else:
-        #     raise ValueError(f"Unknown plugin type: {tool_type}")
+        LOADED_PLUGINS = self.load_plugins()
+        # Get specified plugin to run via input key "tool_type" representing the exact class name as a string in input dictionary
+        self.instance = LOADED_PLUGINS.get(input["tool_type"],None)
+        
+        if self.instance:
+            # Run the selected class with the input information.
+            result = asyncio.run(self.instance.run(input))
+        #else:
+            #Return a JSON failure object with information
+
     @abstractmethod
     def run(self, input_data: Dict[str, Any]):
         """ This function must be implemented by any plugin which inherets this class implement_plugins"""
