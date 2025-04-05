@@ -46,6 +46,8 @@ class TaskInstance:
         self.result = asyncio.run(self.instance.run(self.data))
 
     def get_status(self):
+        if self.thread.is_alive():
+            return {"status": "still processing"}
         with self.lock:
             return self.instance.status()
 
@@ -80,10 +82,10 @@ class TaskManager:
 
 
 task_manager = TaskManager()
-
-@app.post("/")
-def read_root(input:LoadPluginModel):
-    return {"Hello": "World"}
+#
+# @app.post("/")
+# def read_root(input:LoadPluginModel):
+#     return {"Hello": "World"}
 
 
 @app.post("/load_plugin/")
@@ -117,10 +119,7 @@ async def load_plugin(input: LoadPluginModel=Depends(parse_metadata),files: List
                 print(upFiles)
                 instance = cls()
                 toolInput={"num_trials":input.num_trials,"print_to_cli":input.print_to_cli,"file_path_1":upFiles[0],"file_path_2":upFiles[1],"background_file_path":bgUpFiles[0]}
-                print("Before")
                 task_id=task_manager.create_task(instance,toolInput)
-                # result = await instance.run(toolInput)
-                # print(result)
         else:
             raise ValueError(f'Unknown plugin type:{input.get("tool_type")}')
     except Exception as e:
