@@ -1,7 +1,7 @@
 import asyncio
 import importlib
 import os,shutil
-from typing import Union, Literal, Optional, List
+from typing import Literal, Optional, List
 from threading import Thread, Lock
 import time
 import uuid
@@ -16,6 +16,7 @@ class LoadPluginModel(BaseModel):
     tool_type: Literal["MSET","Boolean"]
     num_trials: Optional[int]= 1000
     print_to_cli: Optional[bool]= True
+    gene_set_ids: Optional[List[str]] = list
 
 UPLOAD_DIR = os.getcwd()
 
@@ -28,10 +29,11 @@ class FileMetadata(BaseModel):
 # Function to extract metadata from form fields
 def parse_metadata(
         tool_type: str = Form(...),
-        num_trials: int = Form(...),
-        print_to_cli: bool=Form(...)
+        num_trials: Optional[int] = Form(1000),
+        print_to_cli: Optional[bool]=Form(True),
+        gene_set_ids: Optional[List[str]]=Form([])
 ):
-    return LoadPluginModel(tool_type=tool_type, num_trials=num_trials, print_to_cli=print_to_cli)
+    return LoadPluginModel(tool_type=tool_type, num_trials=num_trials, print_to_cli=print_to_cli, gene_set_ids=gene_set_ids)
 
 class TaskInstance:
     def __init__(self, instance,data):
@@ -89,9 +91,10 @@ task_manager = TaskManager()
 
 
 @app.post("/load_plugin/")
-async def load_plugin(input: LoadPluginModel=Depends(parse_metadata),files: List[UploadFile] = File(...),bgFiles: List[UploadFile] = File(...)):
+async def load_plugin(input: LoadPluginModel=Depends(parse_metadata),files: Optional[List[UploadFile]] = File([]),bgFiles: Optional[List[UploadFile]] = File([])):
     try:
         upFiles,bgUpFiles=[],[]
+        geneIds = input.gene_set_ids
         for ff in files:
             file_path = os.path.join(UPLOAD_DIR, ff.filename)
             with open(file_path, "wb") as buffer:
@@ -103,11 +106,13 @@ async def load_plugin(input: LoadPluginModel=Depends(parse_metadata),files: List
             with open(file_path, "wb") as buffer:
                 shutil.copyfileobj(ff.file, buffer)
             bgUpFiles.append(file_path)
+
+
         tools_yaml_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools.yaml")
         with open(tools_yaml_path, "r") as file:
             config=yaml.safe_load(file)
         tool_type = input.tool_type
-        className=config["tools"].get(tool_type) # "tool type" in input dictionary determines tool selection
+        className=config["tools"].get(tool_type)
         print(className)
         if className:
             module_path, class_name = className.rsplit(".", 1)
@@ -118,7 +123,18 @@ async def load_plugin(input: LoadPluginModel=Depends(parse_metadata),files: List
                 print(bgUpFiles)
                 print(upFiles)
                 instance = cls()
-                toolInput={"num_trials":input.num_trials,"print_to_cli":input.print_to_cli,"file_path_1":upFiles[0],"file_path_2":upFiles[1],"background_file_path":bgUpFiles[0]}
+                file_1=upFiles[0] if len(upFiles)>=2 else None
+                file_2=upFiles[1] if len(upFiles)>=2 else None
+                bg_file=bgUpFiles[0] if len(bgUpFiles)>=1 else None
+                geneset_id_1= geneIds[0] if len(geneIds)>=1 else None
+                geneset_id_2= geneIds[1] if len(geneIds)>=1 else None
+                toolInput={"num_trials":input.num_trials,
+                           "print_to_cli":input.print_to_cli,
+                           "file_path_1":file_1,
+                           "file_path_2":file_2,
+                           "background_file_path":bg_file,
+                           "geneset_id_1":geneset_id_1,
+                           "geneset_id_2": geneset_id_2}
                 task_id=task_manager.create_task(instance,toolInput)
         else:
             raise ValueError(f'Unknown plugin type:{input.get("tool_type")}')

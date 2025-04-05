@@ -1,3 +1,12 @@
 tools:
   MSET: plugins.MSET.MSET.MSETTask
   Boolean: plugins.BooleanAlgebra.BA.BooleanAlgebra
+tools_input:
+  MSET:
+    - num_trials
+    - print_to_cli
+    - file_path_1
+    - file_path_2
+    - geneset_id_1
+    - geneset_id_2
+    - background_file_path
