@@ -2,6 +2,9 @@ import asyncio
 import importlib
 import os,shutil
 from typing import Union, Literal, Optional, List
+from threading import Thread, Lock
+import time
+import uuid
 
 import yaml
 from fastapi import FastAPI, UploadFile, File, Form, Depends
@@ -30,15 +33,57 @@ def parse_metadata(
 ):
     return LoadPluginModel(tool_type=tool_type, num_trials=num_trials, print_to_cli=print_to_cli)
 
+class TaskInstance:
+    def __init__(self, instance,data):
+        self.result = None
+        self.lock = Lock()
+        self.instance=instance
+        self.data = data
+        self.thread = Thread(target=self.run)
+        self.thread.start()
+
+    def run(self):
+        self.result = asyncio.run(self.instance.run(self.data))
+
+    def get_status(self):
+        with self.lock:
+            return self.instance.status()
+
+    def get_result(self):
+        self.thread.join()
+        with self.lock:
+            return self.result
+
+
+class TaskManager:
+    def __init__(self):
+        self.tasks = {}
+
+    def create_task(self,instance, data) -> str:
+        task_id = str(uuid.uuid4())
+        self.tasks[task_id] = TaskInstance(instance,data)
+        return task_id
+
+    def get_status(self, task_id: str) -> str:
+        task = self.tasks.get(task_id)
+        if task:
+            re=task.get_status()
+            print(re)
+            return re
+        return "Invalid Task ID"
+
+    def get_result(self, task_id: str):
+        task = self.tasks.get(task_id)
+        if task:
+            return task.get_result()
+        return "Invalid Task ID"
+
+
+task_manager = TaskManager()
 
 @app.post("/")
 def read_root(input:LoadPluginModel):
     return {"Hello": "World"}
-
-
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
 
 
 @app.post("/load_plugin/")
@@ -73,10 +118,22 @@ async def load_plugin(input: LoadPluginModel=Depends(parse_metadata),files: List
                 instance = cls()
                 toolInput={"num_trials":input.num_trials,"print_to_cli":input.print_to_cli,"file_path_1":upFiles[0],"file_path_2":upFiles[1],"background_file_path":bgUpFiles[0]}
                 print("Before")
-                result = await instance.run(toolInput)
-                print(result)
+                task_id=task_manager.create_task(instance,toolInput)
+                # result = await instance.run(toolInput)
+                # print(result)
         else:
             raise ValueError(f'Unknown plugin type:{input.get("tool_type")}')
     except Exception as e:
         print(e)
         return {"error": e}
+    return {"task_id": task_id}
+
+@app.get("/status/{task_id}")
+def get_status(task_id: str):
+    return {"task_id": task_id, "status": task_manager.get_status(task_id)}
+
+@app.get("/result/{task_id}")
+def get_result(task_id: str):
+    result = task_manager.get_result(task_id)
+    print(result)
+    return {"task_id": task_id, "result": result}
