@@ -1,7 +1,7 @@
 import random
 from collections import Counter
 from dataclasses import dataclass, asdict
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from ATS import ATS_Plugin
 from utils import fetchGeneSymbols_from_geneset
 
@@ -26,9 +26,23 @@ class MSETOutput:
     p_value: float
     histogram: Dict[int, int]
 
+@dataclass
+class MSETStatus:
+    percent_complete: int
+    message: str
+    current_step: str
+    genes_processed: int = 0
+    trials_completed: int = 0
+    time_elapsed: Optional[float] = None
+    time_remaining: Optional[float] = None
+
 
 
 class MSETTask(ATS_Plugin.implement_plugins):
+
+    def __init__(self):
+        self._status = MSETStatus(percent_complete=0, message="Initializing", current_step="")
+
     async def run(self, input_data: Dict[str, Any]) -> Response:
 
 
@@ -44,7 +58,10 @@ class MSETTask(ATS_Plugin.implement_plugins):
 
         representation = input_data.get("representation", "over").lower()  # "over" or "under"
         print_to_cli = input_data.get("print_to_cli", False)
+
         
+        self._update_status(percent=10, message="Retrieving gene sets", current_step="Loading data")
+
         if geneset_id_1:
             group_1_genes = fetchGeneSymbols_from_geneset(geneset_id_1)
         elif file_path_1:
@@ -63,7 +80,10 @@ class MSETTask(ATS_Plugin.implement_plugins):
             group_2_genes = self.extract_genes_from_gw(content2)
         else:
             return Response(result="Error: Provide either file_path_2 or geneset_id_2")
-        
+
+  
+        self._update_status(percent=30, message="Processing background gene sets", current_step="Background Processing")
+
         # If a background file is provided, read it.
         background_file_path_1 = input_data.get("background_file_path_1")
         background_file_path_2 = input_data.get("background_file_path_2")
@@ -127,7 +147,9 @@ class MSETTask(ATS_Plugin.implement_plugins):
         # if not set(list_1_pre).issubset(set(list_1_background)):
         #     return Response(result="Error: list_1 not subset of its background")
         
-        # Run simulation trials: randomly sample genes from the universe and count intersection sizes.
+        self._update_status(percent=50, message="Randomly sampling genes", current_step="Running trails")
+
+        # Run trials: randomly sample genes from the universe and count intersection sizes
         trials: List[int] = []
         for _ in range(num_trials):
             sample1 = set(random.sample(universe, list_1_size))
@@ -135,8 +157,11 @@ class MSETTask(ATS_Plugin.implement_plugins):
             intersection_size = len(sample1.intersection(sample2))
             trials.append(intersection_size)
         
-        # Sort trial results and count how many trials have an intersection size at least as high as observed.
+        # Sort trial results and count how many trials have an intersection size at least as high as observed
         trials.sort()
+
+
+        self._update_status(percent=80, message="Calculating results", current_step="Analysis")
 
         above = sum(1 for t in trials if t >= comp_intersect_size) # computes the number of intersections which are above the comp_intersect_size
 
@@ -170,6 +195,8 @@ class MSETTask(ATS_Plugin.implement_plugins):
             p_value=pvalue,
             histogram=hist
         )
+        
+        self._update_status(percent=100, message="Analysis complete", current_step="Completed")
 
         # Print the results to the CLI if print_to_cli is True.
         if print_to_cli:
@@ -196,9 +223,17 @@ class MSETTask(ATS_Plugin.implement_plugins):
             genes.append(gene)
         return genes
     
-    def status(self) -> Response:
+    def _update_status(self, percent: int, message: str, current_step: str) -> None:
+        """
+        """
+        self._status.percent_complete = percent
+        self._status.message = message
+        self._status.current_step = current_step
 
-        @dataclass
-        class Status:
-            percent_complete: int
-        return Response(result=Status(percent_complete=100))
+    
+    def status(self) -> Response:
+        """
+        """
+        return Response(object=self._status)
+
+
