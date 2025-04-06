@@ -3,7 +3,8 @@ from collections import Counter
 from dataclasses import dataclass, asdict
 from typing import Any, Dict, List, Optional
 from ATS import ATS_Plugin
-from utils import fetchGeneSymbols_from_geneset
+from api.geneSetRestAPI import fetchGeneSymbols_from_geneset
+from utils.gene_helpers import extract_genes_from_gw
 
 # Response data class (Replace with the actual dataclass from jax.apiutils.schemas.dataclasses)
 @dataclass
@@ -67,7 +68,7 @@ class MSETTask(ATS_Plugin.implement_plugins):
         elif file_path_1:
             with open(file_path_1, "r") as f:
                 content1 = f.read()
-            group_1_genes = self.extract_genes_from_gw(content1)
+            group_1_genes = extract_genes_from_gw(content1)
         else:
             return Response(result="Error: Provide either file_path_1 or geneset_id_1")
 
@@ -77,7 +78,7 @@ class MSETTask(ATS_Plugin.implement_plugins):
         elif file_path_2:
             with open(file_path_2, "r") as f:
                 content2 = f.read()
-            group_2_genes = self.extract_genes_from_gw(content2)
+            group_2_genes = extract_genes_from_gw(content2)
         else:
             return Response(result="Error: Provide either file_path_2 or geneset_id_2")
 
@@ -90,14 +91,14 @@ class MSETTask(ATS_Plugin.implement_plugins):
         if background_file_path_1:
             with open(background_file_path_1, "r") as f:
                 background_content_1 = f.read()
-            background_genes_1 = sorted(set(self.extract_genes_from_gw(background_content_1)))
+            background_genes_1 = sorted(set(extract_genes_from_gw(background_content_1)))
         else:
             background_genes_1 = None
         
         if background_file_path_2:
             with open(background_file_path_2, "r") as f:
                 background_content_2 = f.read()
-            background_genes_2 = sorted(set(self.extract_genes_from_gw(background_content_2)))
+            background_genes_2 = sorted(set(extract_genes_from_gw(background_content_2)))
         else:
             background_genes_2 = None
 
@@ -118,7 +119,6 @@ class MSETTask(ATS_Plugin.implement_plugins):
             list_2_background = list_2_pre
         
         missing_genes = set(list_1_pre) - set(list_1_background)
-        print("FRFRF",list_1_background,"SHBDJFFVF",list_2_background,"VFFFFFFFFFFF")
 
         # if missing_genes:
             # print("These gensets are missing in the background")
@@ -128,12 +128,10 @@ class MSETTask(ATS_Plugin.implement_plugins):
         
         # Compute the universe as the intersection of the two background sets
         universe = sorted(set(list_1_background).intersection(list_2_background))
-        print("hello ll ",universe, "END")
         # Filter the pre lists to include only genes that are in the universe
         list_1 = sorted(set(list_1_pre).intersection(universe))
         list_2 = sorted(set(list_2_pre).intersection(universe))
-        print(list_1)
-        print(list_2)
+
 
         # Calculate sizes and the observed intersection size
         list_1_size = len(list_1)
@@ -210,18 +208,18 @@ class MSETTask(ATS_Plugin.implement_plugins):
         # Return the computed results.
         return Response(result={"mset_output": mset_output, "histogram": hist, "info": {"task_type": "mset_analysis"}})
     
-    def extract_genes_from_gw(self, file_content: str) -> List[str]:
-        """
-        """
-        genes = []
-        skip_chars = ("#", ":", "=", "+", "@", "%", "A", "!", "Q", )
-        for line in file_content.splitlines():
-            line = line.strip()
-            if not line or line.startswith(skip_chars):
-                continue
-            gene = line.split()[0]
-            genes.append(gene)
-        return genes
+    # def extract_genes_from_gw(self,file_content: str) -> List[str]:
+    #     """
+    #     """
+    #     genes = []
+    #     skip_chars = ("#", ":", "=", "+", "@", "%", "A", "!", "Q", )
+    #     for line in file_content.splitlines():
+    #         line = line.strip()
+    #         if not line or line.startswith(skip_chars):
+    #             continue
+    #         gene = line.split()[0]
+    #         genes.append(gene)
+    #     return genes
     
     def _update_status(self, percent: int, message: str, current_step: str) -> None:
         """
