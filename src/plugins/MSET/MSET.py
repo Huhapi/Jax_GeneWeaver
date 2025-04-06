@@ -1,14 +1,32 @@
 import random
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from typing import Any, Dict, List
 from ATS import ATS_Plugin
 from utils import fetchGeneSymbols_from_geneset
 
-# Define a simple Response dataclass to wrap the result.
+# Response data class (Replace with the actual dataclass from jax.apiutils.schemas.dataclasses)
 @dataclass
 class Response:
     result: Any
+
+@dataclass
+class MSETOutput:
+    """Output schema for the MSET task."""
+    list_1_size: int
+    list_2_size: int
+    universe_size: int
+    list_1_universe_ratio: float
+    list_2_universe_ratio: float
+    intersection_size: int
+    num_trials: int
+    alternative: str
+    method: str
+    trials_gt_intersect: int
+    p_value: float
+    histogram: Dict[int, int]
+
+
 
 class MSETTask(ATS_Plugin.implement_plugins):
     async def run(self, input_data: Dict[str, Any]) -> Response:
@@ -120,7 +138,7 @@ class MSETTask(ATS_Plugin.implement_plugins):
         # Sort trial results and count how many trials have an intersection size at least as high as observed.
         trials.sort()
 
-        above = sum(1 for t in trials if t >= comp_intersect_size)
+        above = sum(1 for t in trials if t >= comp_intersect_size) # computes the number of intersections which are above the comp_intersect_size
 
         # Compute the p-value based on the representation type.
         if representation == "over":
@@ -134,40 +152,40 @@ class MSETTask(ATS_Plugin.implement_plugins):
         else:
             return Response(result="Error: representation must be either 'over' or 'under'")
         
-        # Create a histogram of the simulated intersection sizes.
+        # Histogram of the intersection sizes.
         hist = dict(Counter(trials))
         
         # Prepare the output dictionary.
-        mset_output = {
-            "List 1 Size": list_1_size,
-            "List 2 Size": list_2_size,
-            "Universe Size": universe_size,
-            "List 1 / Universe": list_1_size,
-            "List 2 / Universe": list_2_size,
-            "List 1/2 Intersect": comp_intersect_size,
-            "Num Trials": num_trials,
-            "Alternative": alternative,
-            "Method": method,
-            "Trials gt intersect": above,
-            "P-Value": pvalue
-        }
-        
-        # Optionally print the results to the CLI.
+        mset_output = MSETOutput(
+            list_1_size=list_1_size,
+            list_2_size=list_2_size,
+            universe_size=universe_size,
+            list_1_universe_ratio=list_1_size / universe_size,
+            list_2_universe_ratio=list_2_size / universe_size,
+            intersection_size=intersection_size,
+            num_trials=num_trials,
+            alternative=alternative,
+            method=method,
+            trials_gt_intersect=above,
+            p_value=pvalue,
+            histogram=hist
+        )
+
+        # Print the results to the CLI if print_to_cli is True.
         if print_to_cli:
             print("\nMSET Output:")
-            for key, value in mset_output.items():
+            for key, value in asdict(mset_output).items():
                 print(f"{key}: {value}")
             print("\nHistogram:")
             for key, value in sorted(hist.items()):
                 print(f"{key}: {value}")
         
         # Return the computed results.
-        return Response(result={"mset_output": mset_output, "histogram": hist})
+        return Response(result={"mset_output": mset_output, "histogram": hist, "info": {"task_type": "mset_analysis"}})
     
     def extract_genes_from_gw(self, file_content: str) -> List[str]:
         """
-        need to make thi better    
-                """
+        """
         genes = []
         skip_chars = ("#", ":", "=", "+", "@", "%", "A", "!", "Q", )
         for line in file_content.splitlines():
