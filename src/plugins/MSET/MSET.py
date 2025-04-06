@@ -13,6 +13,7 @@ class Response:
 class MSETTask(ATS_Plugin.implement_plugins):
     async def run(self, input_data: Dict[str, Any]) -> Response:
 
+
         # Get parameters from input_data
         num_trials = int(input_data.get("num_trials", 1000))
         geneset_id_1 = input_data.get("geneset_id_1") # will be used if geneset ids are provided
@@ -20,59 +21,67 @@ class MSETTask(ATS_Plugin.implement_plugins):
 
         file_path_1 = input_data.get("file_path_1")
         file_path_2 = input_data.get("file_path_2")
-        background_file_path = input_data.get("background_file_path")
-
+        background_file_path_1 = input_data.get("background_file_path_1")
+        background_file_path_2 = input_data.get("background_file_path_2")
 
         representation = input_data.get("representation", "over").lower()  # "over" or "under"
         print_to_cli = input_data.get("print_to_cli", False)
         
         if geneset_id_1:
-            gene_list_1 = fetchGeneSymbols_from_geneset(geneset_id_1)
+            group_1_genes = fetchGeneSymbols_from_geneset(geneset_id_1)
         elif file_path_1:
             with open(file_path_1, "r") as f:
                 content1 = f.read()
+            group_1_genes = self.extract_genes_from_gw(content1)
         else:
             return Response(result="Error: Provide either file_path_1 or geneset_id_1")
 
         # Get content for group 2
         if geneset_id_2:
-            gene_list_2 = fetchGeneSymbols_from_geneset(geneset_id_2)
+            group_2_genes = fetchGeneSymbols_from_geneset(geneset_id_2)
         elif file_path_2:
             with open(file_path_2, "r") as f:
                 content2 = f.read()
+            group_2_genes = self.extract_genes_from_gw(content2)
         else:
             return Response(result="Error: Provide either file_path_2 or geneset_id_2")
         
         # If a background file is provided, read it.
-        background_file_path = input_data.get("background_file_path")
-        if background_file_path:
-            with open(background_file_path, "r") as f:
-                background_content = f.read()
-            background_genes = sorted(set(self.extract_genes_from_gw(background_content)))
+        background_file_path_1 = input_data.get("background_file_path_1")
+        background_file_path_2 = input_data.get("background_file_path_2")
+        if background_file_path_1:
+            with open(background_file_path_1, "r") as f:
+                background_content_1 = f.read()
+            background_genes_1 = sorted(set(self.extract_genes_from_gw(background_content_1)))
         else:
-            background_genes = None
+            background_genes_1 = None
         
-        # Extract gene lists from the file contents
-        group_1_genes = self.extract_genes_from_gw(content1)
-        group_2_genes = self.extract_genes_from_gw(content2)
-    
-   
+        if background_file_path_2:
+            with open(background_file_path_2, "r") as f:
+                background_content_2 = f.read()
+            background_genes_2 = sorted(set(self.extract_genes_from_gw(background_content_2)))
+        else:
+            background_genes_2 = None
+
         list_1_pre = sorted(set(group_1_genes))
         list_2_pre = sorted(set(group_2_genes))
-        print(list_1_pre)
         # Use the background file if provided; otherwise, use the pre gene lists as background.
-
 
         #check if they have same background after checking they dont need to do the intersection
 
-        if background_genes is not None:
-            list_1_background = background_genes
-            list_2_background = background_genes
+        if background_genes_1 is not None:
+            list_1_background = background_genes_1
         else:
             list_1_background = list_1_pre
+
+        if background_genes_2 is not None:
+            list_2_background = background_genes_2
+        else:
             list_2_background = list_2_pre
         
         missing_genes = set(list_1_pre) - set(list_1_background)
+        print("FRFRF",list_1_background,"SHBDJFFVF",list_2_background,"VFFFFFFFFFFF")
+
         # if missing_genes:
             # print("These gensets are missing in the background")
             # for gene in sorted(missing_genes):
@@ -81,7 +90,7 @@ class MSETTask(ATS_Plugin.implement_plugins):
         
         # Compute the universe as the intersection of the two background sets
         universe = sorted(set(list_1_background).intersection(list_2_background))
-        
+        print("hello ll ",universe, "END")
         # Filter the pre lists to include only genes that are in the universe
         list_1 = sorted(set(list_1_pre).intersection(universe))
         list_2 = sorted(set(list_2_pre).intersection(universe))
