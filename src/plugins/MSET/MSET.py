@@ -45,8 +45,7 @@ class MSETTask(ATS_Plugin.implement_plugins):
         self._status = MSETStatus(percent_complete=0, message="Initializing", current_step="")
 
     async def run(self, input_data: Dict[str, Any]) -> Response:
-
-
+        
         # Get parameters from input_data
         num_trials = int(input_data.get("num_trials", 1000))
         geneset_id_1 = input_data.get("geneset_id_1") # will be used if geneset ids are provided
@@ -208,26 +207,12 @@ class MSETTask(ATS_Plugin.implement_plugins):
         # Return the computed results.
         return Response(result={"mset_output": mset_output, "histogram": hist, "info": {"task_type": "mset_analysis"}})
     
-    # def extract_genes_from_gw(self,file_content: str) -> List[str]:
-    #     """
-    #     """
-    #     genes = []
-    #     skip_chars = ("#", ":", "=", "+", "@", "%", "A", "!", "Q", )
-    #     for line in file_content.splitlines():
-    #         line = line.strip()
-    #         if not line or line.startswith(skip_chars):
-    #             continue
-    #         gene = line.split()[0]
-    #         genes.append(gene)
-    #     return genes
-    
     def _update_status(self, percent: int, message: str, current_step: str) -> None:
         """
         """
         self._status.percent_complete = percent
         self._status.message = message
         self._status.current_step = current_step
-
     
     def status(self) -> Response:
         """
