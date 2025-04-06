@@ -17,7 +17,8 @@ if __name__ == "__main__":
         "num_trials": 1000,
         "file_path_1": file_path_1,
         "file_path_2": file_path_2,
-        "background_file_path": background_file_path,
+        "background_file_path_1": background_file_path,
+        "background_file_path_2": background_file_path,
         # "representation": "over",  # Optional; if omitted, it defaults to "over"
         "print_to_cli": True
     }

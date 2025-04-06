@@ -8,6 +8,20 @@ VALID_SPECIES_NAMES = [
 ]
 
 def fetchGeneSymbols_from_geneset(geneset_id):
+    """
+    Fetch gene symbols for a gene set.
+    Retrieves gene set data, extracts source IDs, and returns gene symbols.
+    If source IDs are non-numeric, returns them directly; otherwise maps them.
+    
+    Args:
+        geneset_id: Gene set identifier.
+    
+    Returns:
+        List of gene symbols.
+    
+    Raises:
+        Exception on API errors.
+    """
     geneset_data = get_geneset_data(geneset_id)
     species_id = geneset_data["object"]["geneset"]["species_id"]
     
@@ -30,6 +44,18 @@ def fetchGeneSymbols_from_geneset(geneset_id):
     return gene_symbols
 
 def get_geneset_data(geneset_id):
+    """
+    Retrieve gene set data from the API.
+    
+    Args:
+        geneset_id: Gene set identifier.
+    
+    Returns:
+        Dictionary with gene set data.
+    
+    Raises:
+        Exception if the API request fails.
+    """
     url = f"https://geneweaver.org/api/genesets/{geneset_id}"
     response = requests.get(url)
     if response.status_code != 200:
@@ -37,6 +63,18 @@ def get_geneset_data(geneset_id):
     return response.json()
 
 def get_species_name(species_id):
+    """
+    Get standardized species name by ID.
+    
+    Args:
+        species_id: Species identifier.
+    
+    Returns:
+        Standardized species name.
+    
+    Raises:
+        Exception if species not found.
+    """
     url = "https://geneweaver.org/api/species"
     response = requests.get(url)
     if response.status_code != 200:
@@ -51,6 +89,19 @@ def get_species_name(species_id):
     raise Exception(f"Species ID {species_id} not matched with valid names.")
 
 def get_gene_symbols(source_ids, species_name):
+    """
+    Map source IDs to gene symbols via the API.
+    
+    Args:
+        source_ids: List of source IDs.
+        species_name: Standardized species name.
+    
+    Returns:
+        List of gene symbols.
+    
+    Raises:
+        Exception if the API mapping fails.
+    """
     url = "https://geneweaver.org/api/genes/mappings"
     payload = {
         "source_ids": source_ids,
@@ -93,4 +144,3 @@ def fetchSpecies():
         if species['id'] != 0:
             result.append((species['id'], species['name']))
     return result
-
