@@ -83,12 +83,32 @@ class TaskManager:
         return "Invalid Task ID"
 
 
-task_manager = TaskManager()
-#
-# @app.post("/")
-# def read_root(input:LoadPluginModel):
-#     return {"Hello": "World"}
+def constructInput(input,bgFile,upFiles):
+    from collections import defaultdict
+    dic=defaultdict(lambda:None)
+    tools_yaml_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools.yaml")
+    with open(tools_yaml_path, "r") as file:
+        config=yaml.safe_load(file)
+    tool_type = input.tool_type
+    reqInputs=config["tools_input"].get(tool_type)
+    print(reqInputs)
+    filePath="file_path_"
+    geneids="geneset_id_"
+    for items in reqInputs:
+        if items=="background_file_path":
+            dic[items]=bgFile[0] if len(bgFile)!=0 else None
+        elif filePath in items or geneids in items:
+            tt=items.split("_")
+            if geneids in items:
+                dic[items]=input.gene_set_ids[int(tt[-1])-1]  if len(input.gene_set_ids)>int(tt[-1])-1 else None
+            else:
+                dic[items]=upFiles[int(tt[-1])-1] if len(upFiles)>int(tt[-1])-1 else None
+        else:
+            dic[items]=input.dict().get(items)
+    return dic
 
+
+task_manager = TaskManager()
 
 @app.post("/load_plugin/")
 async def load_plugin(input: LoadPluginModel=Depends(parse_metadata),files: Optional[List[UploadFile]] = File([]),bgFiles: Optional[List[UploadFile]] = File([])):
@@ -123,18 +143,19 @@ async def load_plugin(input: LoadPluginModel=Depends(parse_metadata),files: Opti
                 print(bgUpFiles)
                 print(upFiles)
                 instance = cls()
-                file_1=upFiles[0] if len(upFiles)>=2 else None
-                file_2=upFiles[1] if len(upFiles)>=2 else None
-                bg_file=bgUpFiles[0] if len(bgUpFiles)>=1 else None
-                geneset_id_1= geneIds[0] if len(geneIds)>=1 else None
-                geneset_id_2= geneIds[1] if len(geneIds)>=1 else None
-                toolInput={"num_trials":input.num_trials,
-                           "print_to_cli":input.print_to_cli,
-                           "file_path_1":file_1,
-                           "file_path_2":file_2,
-                           "background_file_path":bg_file,
-                           "geneset_id_1":geneset_id_1,
-                           "geneset_id_2": geneset_id_2}
+                # file_1=upFiles[0] if len(upFiles)>=2 else None
+                # file_2=upFiles[1] if len(upFiles)>=2 else None
+                # bg_file=bgUpFiles[0] if len(bgUpFiles)>=1 else None
+                # geneset_id_1= geneIds[0] if len(geneIds)>=1 else None
+                # geneset_id_2= geneIds[1] if len(geneIds)>=1 else None
+                # toolInput={"num_trials":input.num_trials,
+                #            "print_to_cli":input.print_to_cli,
+                #            "file_path_1":file_1,
+                #            "file_path_2":file_2,
+                #            "background_file_path":bg_file,
+                #            "geneset_id_1":geneset_id_1,
+                #            "geneset_id_2": geneset_id_2}
+                toolInput=constructInput(input,bgUpFiles,upFiles)
                 task_id=task_manager.create_task(instance,toolInput)
         else:
             raise ValueError(f'Unknown plugin type:{input.get("tool_type")}')
