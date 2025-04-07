@@ -1,4 +1,5 @@
 import random
+import time
 from collections import Counter
 from dataclasses import dataclass, asdict
 from typing import Any, Dict, List, Optional
@@ -149,6 +150,8 @@ class MSETTask(ATS_Plugin.implement_plugins):
         
         self._update_status(percent=50, message="Randomly sampling genes", current_step="Running trails")
 
+        time.sleep(1000)
+
         # Run trials: randomly sample genes from the universe and count intersection sizes
         trials: List[int] = []
         for _ in range(num_trials):
@@ -234,6 +237,6 @@ class MSETTask(ATS_Plugin.implement_plugins):
     def status(self) -> Response:
         """
         """
-        return Response(object=self._status)
+        return Response(result=self._status)
 
 

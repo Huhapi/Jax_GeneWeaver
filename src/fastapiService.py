@@ -48,8 +48,6 @@ class TaskInstance:
         self.result = asyncio.run(self.instance.run(self.data))
 
     def get_status(self):
-        if self.thread.is_alive():
-            return {"status": "still processing"}
         with self.lock:
             return self.instance.status()
 
@@ -94,15 +92,16 @@ def constructInput(input,bgFile,upFiles):
     print(reqInputs)
     filePath="file_path_"
     geneids="geneset_id_"
+    backgroundSets="background_file_path_"
     for items in reqInputs:
-        if items=="background_file_path":
-            dic[items]=bgFile[0] if len(bgFile)!=0 else None
-        elif filePath in items or geneids in items:
+        if filePath in items or geneids in items or backgroundSets in items:
             tt=items.split("_")
             if geneids in items:
                 dic[items]=input.gene_set_ids[int(tt[-1])-1]  if len(input.gene_set_ids)>int(tt[-1])-1 else None
-            else:
+            elif filePath in items:
                 dic[items]=upFiles[int(tt[-1])-1] if len(upFiles)>int(tt[-1])-1 else None
+            else:
+                dic[items]=bgFile[int(tt[-1])-1] if len(bgFile)>int(tt[-1])-1 else None
         else:
             dic[items]=input.dict().get(items)
     return dic
@@ -143,18 +142,6 @@ async def load_plugin(input: LoadPluginModel=Depends(parse_metadata),files: Opti
                 print(bgUpFiles)
                 print(upFiles)
                 instance = cls()
-                # file_1=upFiles[0] if len(upFiles)>=2 else None
-                # file_2=upFiles[1] if len(upFiles)>=2 else None
-                # bg_file=bgUpFiles[0] if len(bgUpFiles)>=1 else None
-                # geneset_id_1= geneIds[0] if len(geneIds)>=1 else None
-                # geneset_id_2= geneIds[1] if len(geneIds)>=1 else None
-                # toolInput={"num_trials":input.num_trials,
-                #            "print_to_cli":input.print_to_cli,
-                #            "file_path_1":file_1,
-                #            "file_path_2":file_2,
-                #            "background_file_path":bg_file,
-                #            "geneset_id_1":geneset_id_1,
-                #            "geneset_id_2": geneset_id_2}
                 toolInput=constructInput(input,bgUpFiles,upFiles)
                 task_id=task_manager.create_task(instance,toolInput)
         else:
