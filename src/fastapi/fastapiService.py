@@ -49,8 +49,6 @@ class TaskInstance:
         self.result = asyncio.run(self.instance.run(self.data))
 
     def get_status(self):
-        if self.thread.is_alive():
-            return {"status": "still processing"}
         with self.lock:
             return self.instance.status()
 
