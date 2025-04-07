@@ -5,6 +5,7 @@ from typing import Literal, Optional, List
 from threading import Thread, Lock
 import time
 import uuid
+from ATS import ATS_Plugin
 
 import yaml
 from fastapi import FastAPI, UploadFile, File, Form, Depends
@@ -113,7 +114,6 @@ task_manager = TaskManager()
 async def load_plugin(input: LoadPluginModel=Depends(parse_metadata),files: Optional[List[UploadFile]] = File([]),bgFiles: Optional[List[UploadFile]] = File([])):
     try:
         upFiles,bgUpFiles=[],[]
-        geneIds = input.gene_set_ids
         for ff in files:
             file_path = os.path.join(UPLOAD_DIR, ff.filename)
             with open(file_path, "wb") as buffer:
@@ -126,6 +126,44 @@ async def load_plugin(input: LoadPluginModel=Depends(parse_metadata),files: Opti
                 shutil.copyfileobj(ff.file, buffer)
             bgUpFiles.append(file_path)
 
+<<<<<<< HEAD:src/fastapi/fastapiService.py
+        # Retrieve plugin class instance
+        imp_plugins = ATS_Plugin.implement_plugins()
+        plugins = imp_plugins.load_plugins()
+        instance = plugins.get(input.tool_type,None)
+        if instance:
+        ##################################################
+        # tools_yaml_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools.yaml")
+        # with open(tools_yaml_path, "r") as file:
+        #     config=yaml.safe_load(file)
+        # tool_type = input.tool_type
+        # className=config["tools"].get(tool_type)
+        # print(className)
+        # if className:
+        #     module_path, class_name = className.rsplit(".", 1)
+        #     module = importlib.import_module(module_path)
+        #     cls = getattr(module, class_name)
+        #     print(cls)
+        #     if cls:
+        #         print(bgUpFiles)
+        #         print(upFiles)
+        #         instance = cls() # This is the instance of the class which we are providing.
+                ###########################
+                # file_1=upFiles[0] if len(upFiles)>=2 else None
+                # file_2=upFiles[1] if len(upFiles)>=2 else None
+                # bg_file=bgUpFiles[0] if len(bgUpFiles)>=1 else None
+                # geneset_id_1= geneIds[0] if len(geneIds)>=1 else None
+                # geneset_id_2= geneIds[1] if len(geneIds)>=1 else None
+                # toolInput={"num_trials":input.num_trials,
+                #            "print_to_cli":input.print_to_cli,
+                #            "file_path_1":file_1,
+                #            "file_path_2":file_2,
+                #            "background_file_path":bg_file,
+                #            "geneset_id_1":geneset_id_1,
+                #            "geneset_id_2": geneset_id_2}
+            toolInput=constructInput(input,bgUpFiles,upFiles)
+            task_id=task_manager.create_task(instance,toolInput)
+=======
 
         tools_yaml_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools.yaml")
         with open(tools_yaml_path, "r") as file:
@@ -144,6 +182,7 @@ async def load_plugin(input: LoadPluginModel=Depends(parse_metadata),files: Opti
                 instance = cls()
                 toolInput=constructInput(input,bgUpFiles,upFiles)
                 task_id=task_manager.create_task(instance,toolInput)
+>>>>>>> 224ed9f3c1684a0e74b23d6970a7d645e69d6e07:src/fastapiService.py
         else:
             raise ValueError(f'Unknown plugin type:{input.get("tool_type")}')
     except Exception as e:
