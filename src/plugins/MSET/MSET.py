@@ -147,8 +147,6 @@ class MSETTask(ATS_Plugin.implement_plugins):
         
         self._update_status(percent=50, message="Randomly sampling genes", current_step="Running trails")
 
-        time.sleep(1000)
-
         # Run trials: randomly sample genes from the universe and count intersection sizes
         trials: List[int] = []
         for _ in range(num_trials):
