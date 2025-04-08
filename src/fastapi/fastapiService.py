@@ -40,19 +40,19 @@ class TaskInstance:
     def __init__(self, instance,data):
         self.result = None
         self.lock = Lock()
-        self.instance=instance
+        self.ats=instance
         self.data = data
         self.thread = Thread(target=self.run)
         self.thread.start()
 
     def run(self):
-        self.result = asyncio.run(self.instance.run(self.data))
+        self.result = asyncio.run(self.ats.execute(self.data))
 
     def get_status(self):
         if self.thread.is_alive():
             return {"status": "still processing"}
         with self.lock:
-            return self.instance.status()
+            return self.ats.status()
 
     def get_result(self):
         self.thread.join()
@@ -129,9 +129,7 @@ async def load_plugin(input: LoadPluginModel=Depends(parse_metadata),files: Opti
 
         # Retrieve plugin class instance
         imp_plugins = ATS_Plugin.implement_plugins()
-        plugins = imp_plugins.load_plugins()
-        instance = plugins.get(input.tool_type, None)
-        if instance:
+        if imp_plugins:
         ##################################################
         # tools_yaml_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools.yaml")
         # with open(tools_yaml_path, "r") as file:
@@ -162,7 +160,7 @@ async def load_plugin(input: LoadPluginModel=Depends(parse_metadata),files: Opti
                 #            "geneset_id_1":geneset_id_1,
                 #            "geneset_id_2": geneset_id_2}
             toolInput=constructInput(input,bgUpFiles,upFiles)
-            task_id=task_manager.create_task(instance,toolInput)
+            task_id=task_manager.create_task(imp_plugins,toolInput)
         else:
             raise ValueError(f'Unknown plugin type:{input.get("tool_type")}')
     except Exception as e:
