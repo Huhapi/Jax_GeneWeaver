@@ -2,12 +2,7 @@
 Service namespace for the Boolean Algebra tool
 """
 import collections
-import sys
-import os
 
-
-project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-sys.path.append(project_root)
 from src.api.geneSetRestAPI import get_geneset_data, fetchSpecies, fetch_homologs
 
 
