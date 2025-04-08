@@ -2,9 +2,18 @@
 Tool Class Definition for Boolean Algebra. See service.py for the heavy lifting.
 """
 import json
-from plugins.BooleanAlgebra import service
-from plugins.GeneweaverToolBase import GeneWeaverToolBase
-from ATS import ATS_Plugin
+import service
+from src.ATS import ATS_Plugin
+from dataclasses import dataclass
+from typing import Any, Dict
+
+@dataclass
+class Response:
+    result: Any
+
+@dataclass
+class BooleanAlgebraStatus:
+    message: str
 
 class BooleanAlgebra(ATS_Plugin.implement_plugins):
     
@@ -24,25 +33,37 @@ class BooleanAlgebra(ATS_Plugin.implement_plugins):
     # ===
 
     def __init__(self, *args, **kwargs):
-        self.init("BooleanAlgebra")
-        self.urlroot=''
-        self.curr_status="Initialized Boolean Algebra"
+        self.name = "BooleanAlgebra"
+        self._parameters = {}
+        self._results = {}
+        self._gsids = []
+        self.urlroot = ''
+        self._status = BooleanAlgebraStatus(
+            message="Initialized Boolean Algebra"
+        )
 
-    def get_args(self):
+    def _update_status(self, message: str) -> None:
+        self._status.message = message
+
+    async def run(self, input_data: Dict[str, Any]) -> Response:
+        # Extract parameters from input_data
+        self._parameters = {
+            'BooleanAlgebra_Relation': input_data.get('relation', 'intersect'),
+            'at_least': input_data.get('at_least', 2)
+        }
+        
+        # Extract geneset IDs from input_data
+        self._gsids = input_data.get('geneset_ids', [])
+        
+        # Get parameters for tool run
         relation = self._parameters['BooleanAlgebra_Relation'].lower()
-        output_prefix = self._parameters["output_prefix"]   # {.el,.dot,.png}
         at_least = self._parameters['at_least']
         
         # Strip 'GS' from gsids arguments to get ode gene ids
         geneset_ids = [g[2:] for g in self._gsids]
         
-        return relation, output_prefix, at_least, geneset_ids
-
-    def run(self):
-
-        # Get parameters for tool run
-        relation, output_prefix, at_least, geneset_ids = self.get_args()
-        self.curr_status="Boolean Algebra Tool Running"
+        self._update_status("Boolean Algebra Tool Running")
+        
         # Results we know on submission
         result_dict = {
             # ---Styling Constants
@@ -62,19 +83,21 @@ class BooleanAlgebra(ATS_Plugin.implement_plugins):
             # Number of genesets in the current run of the tool
             'numGS': len(geneset_ids),
         }
-
+        
         # Species for tool results page
-        all_species_short, all_species_full = service.get_all_geneweaver_species_for_boolean(self.db.cursor())
+        all_species_short, all_species_full = service.get_all_geneweaver_species_for_boolean()
         # Species for tool run
-        species_in_genesets = service.get_species_in_genesets(self.db.cursor(), geneset_ids)
-
+        species_in_genesets = service.get_species_in_genesets(geneset_ids)
+        
+        self._update_status("Fetching homolog data")
+        
         # Get gene data
         homolog_data = service.get_homologs_for_geneset(geneset_ids, species_ids=species_in_genesets)
         bool_results = service.group_homologs(homolog_data, species_in_genesets)
 
         # Geneset Ids returned in the query
         result_geneset_ids = list(set([item[4] for item in homolog_data]))
-
+        
         # Add tool results to result dict
         result_dict.update({
             # Number of genesets in the current run of the tool
@@ -94,16 +117,19 @@ class BooleanAlgebra(ATS_Plugin.implement_plugins):
             result_dict['groups'] = service.create_circle_code(bool_results)
 
         if relation != 'union':
+            self._update_status("Computing intersection")
             # In case of Intersect, create dictionary of only
             # elements in bool_results with > than intersect
             intersection_sizes = service.intersect(bool_results, at_least)
             result_dict['intersect_results'] = intersection_sizes
 
             if relation == 'except':
+                self._update_status("Computing except operation")
                 # If except then perform union minus the union of the intersections.
                 # For GS A, B, C = (A U B U C)-((A N B) U (A N C) U (B N C))
                 result_dict['bool_except'] = service.bool_except(bool_results)
 
+        self._update_status("Clustering genes")
         # Cluster result genes based on shared and unique genes per species
         # This will be placed in a d3 graph on the site
         #
@@ -116,23 +142,10 @@ class BooleanAlgebra(ATS_Plugin.implement_plugins):
         # Update the results of the tool
         self._results.update(result_dict)
 
-        # dump the dictionary into a json file that will be read
-        # by the template
-        with open(output_prefix + '.json', 'w') as fp:
-            json.dump(self._results, fp)
+        self._update_status("Boolean Algebra Tool Completed")
+        
+        # Return the response with serializable data
+        return Response(result={"boolean_algebra_output": result_dict, "info": {"task_type": "boolean_algebra"}})
 
-        self.curr_status="Boolean Algebra Tool Completed"
-
-    def status(self):
-        return self.curr_status
-
-# if __name__ == "__main__":
-    
-#     tool = BooleanAlgebra()
-#     tool._parameters = {
-#         'BooleanAlgebra_Relation': 'intersect',
-#         'output_prefix': 'test_output',
-#         'at_least': 2
-#     }
-#     tool._gsids = ['GS1', 'GS2']  # Example gene set IDs
-#     tool.run()
+    def status(self) -> Response:
+        return Response(result=self._status)

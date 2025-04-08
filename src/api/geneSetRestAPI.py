@@ -144,3 +144,15 @@ def fetchSpecies():
         if species['id'] != 0:
             result.append((species['id'], species['name']))
     return result
+
+def fetch_homologs(gene_id):   
+    url = f"https://geneweaver.jax.org/aon/api/homologs/?gene_id={gene_id}"
+    response = requests.get(url)
+    if response.status_code == 404:
+        return []  
+    elif response.status_code == 500:
+        print(f"Server error for gene {gene_id}")
+        return []  
+    elif response.status_code != 200:
+        raise Exception(f"Error fetching homologs: {response.text}")
+    return response.json()

@@ -2,19 +2,15 @@
 Service namespace for the Boolean Algebra tool
 """
 import collections
-from api.geneSetRestAPI import fetchGeneSets, fetchSpecies
+import sys
+import os
 
 
-# def get_all_geneweaver_species(cursor):
-#     """
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(project_root)
+from src.api.geneSetRestAPI import get_geneset_data, fetchSpecies, fetch_homologs
 
-#     :return: list of tuples sp_id, sp_name
-#     """
-#     # TODO: Use sqlalchemy for this relation
-#     cursor.execute(SELECT_ALL_SPECIES_SQL)
-#     result = cursor.fetchall()
-#     cursor.close()
-#     return result
+
 def get_all_geneweaver_species():
     return fetchSpecies()
 
@@ -68,18 +64,32 @@ def get_all_geneweaver_species_for_boolean():
 def get_homologs_for_geneset(geneset_ids, species_ids=None):
     species_ids = species_ids or get_species_in_genesets(geneset_ids)
     homolog_data = []
+    
     for gs_id in geneset_ids:
-        gene_data = fetchGeneSets(gs_id)
-        if 'homologs' in gene_data:
-            for homolog in gene_data['homologs']:
-                homolog_tuple = (
-                    homolog.get('hom_source_id'),
-                    homolog.get('ode_gene_id'),
-                    homolog.get('ode_ref_id'),
-                    homolog.get('sp_id'),
-                    gs_id
-                )
-                homolog_data.append(homolog_tuple)
+        gene_data = get_geneset_data(gs_id)
+        if 'object' in gene_data and 'geneset_values' in gene_data['object']:
+            for gene_value in gene_data['object']['geneset_values']:
+                ref_id = gene_value.get('ode_ref_id')
+                if ref_id:
+                    # Validate that ref_id is a valid integer
+                    try:
+                        # Try to convert ref_id to integer to validate it
+                        ref_id_int = int(ref_id)
+                        homologs = fetch_homologs(ref_id_int)
+                        for homolog in homologs:
+                            homolog_tuple = (
+                                homolog['hom_id'],
+                                gene_value.get('ode_gene_id'),
+                                ref_id,
+                                homolog['sp_id'],
+                                gs_id
+                            )
+                            homolog_data.append(homolog_tuple)
+                    except (ValueError, TypeError):
+                        # Skip this gene if ref_id is not a valid integer
+                        print(f"Warning: Invalid ref_id '{ref_id}' for geneset {gs_id}. Skipping.")
+                        continue
+    
     return homolog_data
 
 def group_homologs(homologs, species_ids):
@@ -111,31 +121,15 @@ def get_grouped_homologs_for_genesets(geneset_ids, species_ids=None, homolog_dat
     :param homolog_data:
     :return:
     """
-    species_ids = species_ids #or get_species_in_genesets(cursor, geneset_ids)
+    species_ids = species_ids or get_species_in_genesets(geneset_ids)
     homolog_data = homolog_data or get_homologs_for_geneset(geneset_ids, species_ids)
     return group_homologs(homolog_data, species_ids)
-
-
-# def get_species_in_genesets(cursor, geneset_ids):
-#     """
-#     Get a unique list of species ids found in the genesets ids provided
-#     :param cursor:
-#     :param geneset_ids:
-#     :return:
-#     """
-#     species_ids = []
-#     for g_id in geneset_ids:
-#         cursor.execute('''SELECT DISTINCT sp_id FROM production.geneset WHERE gs_id=%s''' % g_id, )
-#         res = cursor.fetchall()
-#         for r in res:
-#             species_ids.append(int(r[0]))
-#     return list(set(species_ids))
 
 def get_species_in_genesets(geneset_ids):
     species_ids = set()
     for gs_id in geneset_ids:
-        gene_data = fetchGeneSets(gs_id)
-        species_ids.append(gene_data['species'])
+        gene_data = get_geneset_data(gs_id)
+        species_ids.add(gene_data["object"]["geneset"]["species_id"])
     return list(species_ids)
 
 def cluster_genes(homolog_data, species_ids):
@@ -154,7 +148,10 @@ def cluster_genes(homolog_data, species_ids):
     genes_per_geneset = {sp: {'unique': [], 'intersection': [], 'species': []} for sp in species_ids}
 
     for homolog in homolog_data:
-        genes_per_geneset[homolog[3]]['species'].append(homolog[0])
+        species_id = homolog[3]  # Get the species ID
+        gene_id = homolog[1]     # Get the gene ID
+        if species_id in genes_per_geneset:  # Only process if we know about this species
+            genes_per_geneset[species_id]['species'].append(gene_id)
 
     gene_comparision_list_all = []
     gene_comparision_list_sp = []

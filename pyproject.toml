@@ -22,7 +22,7 @@ requests = "^2.32.3"
 [tool.poetry.plugins."jax.ats.plugins"]
 
 "MSET" = "plugins.MSET.MSET:MSETTask"  # This is: path.to.file : class name
-#"BooleanAlgebra" = "plugins.BooleanAlgebra.BA:BooleanAlgebra"  # This is: path.to.file : class name
+"BooleanAlgebra" = "plugins.BooleanAlgebra.BA:BooleanAlgebra"  # This is: path.to.file : class name
 
 
 [build-system]

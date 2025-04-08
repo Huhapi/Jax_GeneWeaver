@@ -70,3 +70,5 @@ dmypy.json
 
 # Project specific
 src/pypackage_template/version.py
+
+test_output.json
