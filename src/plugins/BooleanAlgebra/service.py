@@ -3,7 +3,7 @@ Service namespace for the Boolean Algebra tool
 """
 import collections
 
-from src.api.geneSetRestAPI import get_geneset_data, fetchSpecies, fetch_homologs
+from plugins.api.geneSetRestAPI import get_geneset_data, fetchSpecies, fetch_homologs
 
 
 def get_all_geneweaver_species():

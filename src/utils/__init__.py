@@ -1,1 +1,0 @@
-from api.geneSetRestAPI import fetchGeneSymbols_from_geneset

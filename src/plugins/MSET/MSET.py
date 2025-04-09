@@ -4,7 +4,7 @@ from collections import Counter
 from dataclasses import dataclass, asdict
 from typing import Any, Dict, List, Optional
 from ATS import ATS_Plugin
-from api.geneSetRestAPI import fetchGeneSymbols_from_geneset
+from plugins.api.geneSetRestAPI import fetchGeneSymbols_from_geneset
 from utils.gene_helpers import extract_genes_from_gw
 
 # Response data class (Replace with the actual dataclass from jax.apiutils.schemas.dataclasses)
