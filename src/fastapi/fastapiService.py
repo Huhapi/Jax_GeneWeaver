@@ -52,7 +52,7 @@ class TaskInstance:
         if self.thread.is_alive():
             return {"status": "still processing"}
         with self.lock:
-            return self.ats.status()
+            return self.ats.get_status()
 
     def get_result(self):
         self.thread.join()
