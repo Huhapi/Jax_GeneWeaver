@@ -28,7 +28,7 @@ if __name__ == "__main__":
     background_file_path = os.path.join(tests_dir, "KEGGRattusnorvegicusBG.txt")
 
     input_data = {
-        "tool_type": "MSETTask",
+        "tools_input": "MSET",
         "num_trials": 1000,
         "file_path_1": file_path_1,
         "file_path_2": file_path_2,

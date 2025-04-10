@@ -45,6 +45,7 @@ class implement_plugins():
             self.instance = LOADED_PLUGINS.get("MSETTask",None)
         
         if self.instance:
+            print("Failed to load instance.")
             # Run the selected class with the input information.
             return asyncio.run(self.instance.run(input))
         #else:
