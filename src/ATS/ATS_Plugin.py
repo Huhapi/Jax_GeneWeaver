@@ -47,7 +47,7 @@ class implement_plugins():
         if self.instance:
             print("Failed to load instance.")
             # Run the selected class with the input information.
-            return asyncio.run(self.instance.run(input))
+            return self.instance.run(input)
         #else:
             #Return a JSON failure object with information
 

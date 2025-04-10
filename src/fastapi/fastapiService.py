@@ -106,6 +106,7 @@ def constructInput(input,bgFile,upFiles):
                 dic[items]=upFiles[int(tt[-1])-1] if len(upFiles)>int(tt[-1])-1 else None
         else:
             dic[items]=input.dict().get(items)
+    dic["tools_input"]="MSET"
     return dic
 
 
