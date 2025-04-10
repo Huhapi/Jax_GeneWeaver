@@ -41,7 +41,8 @@ class implement_plugins():
 
         LOADED_PLUGINS = self.load_plugins()
         # Get specified plugin to run via input key "tool_type" representing the exact class name as a string in input dictionary
-        self.instance = LOADED_PLUGINS.get(input["tool_type"],None)
+        if input["tools_input"] == "MSET":
+            self.instance = LOADED_PLUGINS.get("MSETTask",None)
         
         if self.instance:
             # Run the selected class with the input information.
