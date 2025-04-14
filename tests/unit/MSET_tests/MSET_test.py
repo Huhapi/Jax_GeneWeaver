@@ -21,7 +21,7 @@ if __name__ == "__main__":
         "background_file_path_2": background_file_path,
         # "representation": "over",  # Optional; if omitted, it defaults to "over"
         "print_to_cli": True,
-        "log":True #optional
+        "log":True #optional for showing the current status
     }
     
     # Create an instance of the plugin task and run it asynchronously.

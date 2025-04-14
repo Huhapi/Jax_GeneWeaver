@@ -10,6 +10,11 @@ from plugins.MSET.schemas import Response, MSETOutput, MSETStatus
 from plugins.MSET.simulation import run_trials   # Heavy simulation moved to its own module
 
 class MSETTask(ATS_Plugin.implement_plugins):
+    """
+    A plugin for performing Modular Single-set Enrichment Test (MSET).
+    MSET was developed to compare gene lists. From four character lists (gene_list1, gene_list2, background1, background2), 
+    it computes a randomization-based p-value describing the likelihood that the intersect of gene_list1 and gene_list2 is underexpressed or overexpressed relative to randomness alone    
+    """  
 
     def __init__(self):
         self._status = MSETStatus(percent_complete=0, message="Initializing", current_step="")
@@ -168,4 +173,10 @@ class MSETTask(ATS_Plugin.implement_plugins):
             print(f"[STATUS] {percent}% - {message} ({current_step})")  
     
     def status(self) -> Response:
+        """
+        Returns the current status of the MSET task.
+
+        Returns:
+            Response: Object containing the progress and message.
+        """
         return Response(result=self._status)
