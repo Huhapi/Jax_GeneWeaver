@@ -2,13 +2,8 @@
 Service namespace for the Boolean Algebra tool
 """
 import collections
-import sys
-import os
 
-# Add project root to Python path
-project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-sys.path.append(project_root)
-from src.plugins.api.geneSetRestAPI import get_geneset_data, fetchSpecies, fetch_homologs
+from src.plugins.api.geneSetRestAPI import get_geneset_data, fetchSpecies
 
 
 def get_all_geneweaver_species():
@@ -283,17 +278,3 @@ def bool_except(bool_results):
                     bool_except[i][value[j]] = v
         i += 1
     return bool_except
-
-
-def create_circle_code(bool_results):
-    """
-    Create circle code for visualization.
-    
-    :param bool_results: Dictionary of grouped genes
-    :return: Dictionary of geneset IDs by gene ID
-    """
-    gps = collections.defaultdict(list)
-    for key, value in bool_results.items():
-        for k in bool_results[key]:
-            gps[key].append(k[3])  # Add geneset ID
-    return gps
