@@ -49,8 +49,6 @@ class TaskInstance:
         self.result = asyncio.run(self.ats.execute(self.data))
 
     def get_status(self):
-        if self.thread.is_alive():
-            return {"status": "still processing"}
         with self.lock:
             return self.ats.get_status()
 
@@ -130,8 +128,7 @@ async def load_plugin(input: LoadPluginModel=Depends(parse_metadata),files: Opti
 
         # Retrieve plugin class instance
         imp_plugins = ATS_Plugin.implement_plugins()
-        if imp_plugins:
-        ##################################################
+
         # tools_yaml_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools.yaml")
         # with open(tools_yaml_path, "r") as file:
         #     config=yaml.safe_load(file)
@@ -146,20 +143,8 @@ async def load_plugin(input: LoadPluginModel=Depends(parse_metadata),files: Opti
         #     if cls:
         #         print(bgUpFiles)
         #         print(upFiles)
-        #         instance = cls() # This is the instance of the class which we are providing.
-                ###########################
-                # file_1=upFiles[0] if len(upFiles)>=2 else None
-                # file_2=upFiles[1] if len(upFiles)>=2 else None
-                # bg_file=bgUpFiles[0] if len(bgUpFiles)>=1 else None
-                # geneset_id_1= geneIds[0] if len(geneIds)>=1 else None
-                # geneset_id_2= geneIds[1] if len(geneIds)>=1 else None
-                # toolInput={"num_trials":input.num_trials,
-                #            "print_to_cli":input.print_to_cli,
-                #            "file_path_1":file_1,
-                #            "file_path_2":file_2,
-                #            "background_file_path":bg_file,
-                #            "geneset_id_1":geneset_id_1,
-                #            "geneset_id_2": geneset_id_2}
+        #         imp_plugins = cls()
+        if imp_plugins:
             toolInput=constructInput(input,bgUpFiles,upFiles)
             task_id=task_manager.create_task(imp_plugins,toolInput)
         else:
