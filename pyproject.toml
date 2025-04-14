@@ -33,6 +33,7 @@ python = "^3.10"
 jax-apiutils = "*"
 pyyaml = "^6.0.2"
 requests = "^2.32.3"
+fastapi = ">=0.95.0"
 
 [tool.poetry.group.dev]
 optional = true
