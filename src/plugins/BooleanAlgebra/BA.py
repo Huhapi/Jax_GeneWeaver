@@ -112,10 +112,7 @@ class BooleanAlgebra(ATS_Plugin.implement_plugins):
             'bool_results': bool_results,
         })
 
-        # Circles are only displayed if there are less than 10 genesets
-        if 1 <= len(result_geneset_ids) <= 10:
-            result_dict['groups'] = service.create_circle_code(bool_results)
-
+    
         # Initialize intersection_sizes as empty
         intersection_sizes = {}
         
@@ -197,7 +194,7 @@ class BooleanAlgebra(ATS_Plugin.implement_plugins):
                 
 #         result = await ba.run(input_data)
                 
-#         with open('hello' + '.json', 'w') as fp:
+#         with open('output' + '.json', 'w') as fp:
 #             json.dump(result.result, fp)
 #         print(result.result)
 #         print(f"\nStatus: {ba.status().result}")

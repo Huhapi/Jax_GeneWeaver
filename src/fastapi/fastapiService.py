@@ -32,9 +32,11 @@ def parse_metadata(
         tool_type: str = Form(...),
         num_trials: Optional[int] = Form(1000),
         print_to_cli: Optional[bool]=Form(True),
-        gene_set_ids: Optional[List[str]]=Form([])
+        gene_set_ids: Optional[List[str]]=Form([]),
+        relation: Optional[str] = Form(None),
+        at_least: Optional[int] = Form(None)
 ):
-    return LoadPluginModel(tool_type=tool_type, num_trials=num_trials, print_to_cli=print_to_cli, gene_set_ids=gene_set_ids)
+    return LoadPluginModel(tool_type=tool_type, num_trials=num_trials, print_to_cli=print_to_cli, gene_set_ids=gene_set_ids, relation=relation, at_least=at_least)
 
 class TaskInstance:
     def __init__(self, instance,data):
@@ -104,9 +106,13 @@ def constructInput(input,bgFile,upFiles):
                 dic[items]=input.gene_set_ids[int(tt[-1])-1]  if len(input.gene_set_ids)>int(tt[-1])-1 else None
             else:
                 dic[items]=upFiles[int(tt[-1])-1] if len(upFiles)>int(tt[-1])-1 else None
+        elif items=="relation":
+            dic[items]=input.relation
+        elif items=="at_least":
+            dic[items]=input.at_least
         else:
             dic[items]=input.dict().get(items)
-    dic["tools_input"]="MSET"
+    dic["tools_input"]=tool_type
     return dic
 
 
