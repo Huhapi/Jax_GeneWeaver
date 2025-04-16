@@ -1,10 +1,14 @@
 import asyncio
 import importlib
 import os,shutil
-from typing import Literal, Optional, List
+from typing import Literal, Optional, List, Callable
 from threading import Thread, Lock
 import time
-import uuid
+import uuid, inspect
+
+import starlette.datastructures
+from starlette.responses import JSONResponse
+
 from ATS import ATS_Plugin
 
 import yaml
@@ -34,7 +38,7 @@ def parse_metadata(
         print_to_cli: Optional[bool]=Form(True),
         gene_set_ids: Optional[List[str]]=Form([]),
         relation: Optional[str] = Form(None),
-        at_least: Optional[int] = Form(None)
+        at_least: Optional[int] = Form(0)
 ):
     return LoadPluginModel(tool_type=tool_type, num_trials=num_trials, print_to_cli=print_to_cli, gene_set_ids=gene_set_ids, relation=relation, at_least=at_least)
 
@@ -114,6 +118,10 @@ def constructInput(input,bgFile,upFiles):
     return dic
 
 
+def constructInputNew(tool,dic):
+    pass
+
+
 task_manager = TaskManager()
 
 @app.post("/load_plugin/")
@@ -169,3 +177,57 @@ def get_result(task_id: str):
     result = task_manager.get_result(task_id)
     print(result)
     return {"task_id": task_id, "result": result}
+
+with open("tools_new.yaml", "r") as f:
+    tools_config = yaml.safe_load(f)
+
+# Type map for form inputs
+type_map = {
+    "str": str,
+    "int": int,
+    "List<str>": List[str],
+    "bool": bool,
+    "UploadFile": UploadFile,
+}
+
+def make_endpoint(tool: str, params: list) -> Callable:
+    # Create async handler
+    async def endpoint_func(**kwargs):
+        # inputt=constructInputNew(tool,dict(kwargs))
+        for key,values in kwargs.items():
+            print(key)
+            if type(values)==starlette.datastructures.UploadFile:
+                file_path = os.path.join(UPLOAD_DIR, values.filename)
+                with open(file_path, "wb") as buffer:
+                    shutil.copyfileobj(values.file, buffer)
+                kwargs[key]=values.filename
+        kwargs["tools_input"]=tool
+        imp_plugins = ATS_Plugin.implement_plugins()
+        if imp_plugins:
+            task_id=task_manager.create_task(imp_plugins,kwargs)
+        else:
+            raise ValueError(f'Unknown plugin type:{tool}')
+        return JSONResponse(content={"tool": tool, "received": kwargs,"task_id":task_id})
+
+    # Build signature dynamically
+    param_defs = {}
+    for p in params:
+        param_type = type_map.get(p["type"])
+        default_value = File(None) if param_type == UploadFile else Form(None)
+        param_defs[p["name"]] = inspect.Parameter(
+            p["name"],
+            inspect.Parameter.POSITIONAL_OR_KEYWORD,
+            default=default_value,
+            annotation=param_type,
+        )
+
+    # Set custom signature
+    sig = inspect.Signature(parameters=list(param_defs.values()))
+    endpoint_func.__signature__ = sig
+    return endpoint_func
+
+# Register endpoints
+# for tools in tools_config["tools_input"]:
+for tool_name, inputs in tools_config["tools_input"].items():
+    endpoint = make_endpoint(tool_name, inputs)
+    app.add_api_route(f"/{tool_name}", endpoint, methods=["POST"])
