@@ -3,7 +3,7 @@ Service namespace for the Boolean Algebra tool
 """
 import collections
 
-from plugins.api.geneSetRestAPI import get_geneset_data, fetchSpecies, fetch_homologs
+from plugins.api.geneSetRestAPI import get_geneset_data, fetchSpecies
 
 
 def get_all_geneweaver_species():
@@ -57,68 +57,88 @@ def get_all_geneweaver_species_for_boolean():
 #     return results
 
 def get_homologs_for_geneset(geneset_ids, species_ids=None):
-    species_ids = species_ids or get_species_in_genesets(geneset_ids)
-    homolog_data = []
-    
-    for gs_id in geneset_ids:
-        gene_data = get_geneset_data(gs_id)
-        if 'object' in gene_data and 'geneset_values' in gene_data['object']:
-            for gene_value in gene_data['object']['geneset_values']:
-                ref_id = gene_value.get('ode_ref_id')
-                if ref_id:
-                    # Validate that ref_id is a valid integer
-                    try:
-                        # Try to convert ref_id to integer to validate it
-                        ref_id_int = int(ref_id)
-                        homologs = fetch_homologs(ref_id_int)
-                        for homolog in homologs:
-                            homolog_tuple = (
-                                homolog['hom_id'],
-                                gene_value.get('ode_gene_id'),
-                                ref_id,
-                                homolog['sp_id'],
-                                gs_id
-                            )
-                            homolog_data.append(homolog_tuple)
-                    except (ValueError, TypeError):
-                        # Skip this gene if ref_id is not a valid integer
-                        print(f"Warning: Invalid ref_id '{ref_id}' for geneset {gs_id}. Skipping.")
-                        continue
-    
-    return homolog_data
-
-def group_homologs(homologs, species_ids):
     """
+    Get gene data for genesets, focusing on same-species gene matching.
+    Instead of fetching homologs, we'll just use the ode_gene_id for matching.
+    
+    :param geneset_ids: List of geneset IDs
+    :param species_ids: List of species IDs (optional)
+    :return: List of gene data tuples
+    """
+    species_ids = species_ids or get_species_in_genesets(geneset_ids)
+    gene_data = []
+    
+    # Create a dictionary to store genes by species
+    genes_by_species = {}
+    
+    # First, collect all genes by species
+    for gs_id in geneset_ids:
+        geneset_info = get_geneset_data(gs_id)
+        if 'object' in geneset_info and 'geneset_values' in geneset_info['object']:
+            species_id = geneset_info["object"]["geneset"]["species_id"]
+            
+            if species_id not in genes_by_species:
+                genes_by_species[species_id] = []
+                
+            for gene_value in geneset_info['object']['geneset_values']:
+                gene_id = gene_value.get('ode_gene_id')
+                if gene_id:
+                    # Create a tuple with (gene_id, gene_id, ref_id, species_id, gs_id)
+                    # We use gene_id twice to maintain the same structure as before
+                    gene_tuple = (
+                        gene_id,  # Using gene_id as the key instead of hom_id
+                        gene_id,  # The actual gene ID
+                        gene_value.get('ode_ref_id', ''),
+                        species_id,
+                        gs_id
+                    )
+                    genes_by_species[species_id].append(gene_tuple)
+    
+    # Now, for each species, add the genes to the result
+    for species_id, genes in genes_by_species.items():
+        gene_data.extend(genes)
+    
+    return gene_data
 
-    :param homologs: The tuple of tuples returned by cursor.fetchall() on the homolog query.
+def group_homologs(gene_data, species_ids):
+    """
+    Group genes by their ID for same-species matching.
+    
+    :param gene_data: The list of gene data tuples
     :param species_ids: A list of all species ids
-    :return:
+    :return: Dictionary of grouped genes
     """
     bool_results = {}
-    for homolog in homologs:
-        key = homolog[0]
+    
+    # Group genes by their ID
+    for gene in gene_data:
+        key = gene[0]  # Use the gene ID as the key
+        
+        # If we only have one species, use the gene ID directly
         if len(species_ids) == 1:
-            key = homolog[1]
-        elif not homolog[0]:
-            key = -1*homolog[1]
+            key = gene[1]
+        
         current_val = bool_results.get(key, [])
-        current_val.append(homolog[1:5])
+        current_val.append(gene[1:5])  # Append the rest of the gene data
         bool_results[key] = current_val
+    
+    # Sort the results by the number of genes in each group
     bool_results = {i[0]: i[1] for i in sorted(list(bool_results.items()), key=lambda t: len(t[1][0]))}
+    
     return bool_results
 
-
-def get_grouped_homologs_for_genesets(geneset_ids, species_ids=None, homolog_data=None):
+def get_grouped_homologs_for_genesets(geneset_ids, species_ids=None, gene_data=None):
     """
-
-    :param geneset_ids:
-    :param species_ids:
-    :param homolog_data:
-    :return:
+    Get grouped genes for genesets, focusing on same-species matching.
+    
+    :param geneset_ids: List of geneset IDs
+    :param species_ids: List of species IDs (optional)
+    :param gene_data: Pre-fetched gene data (optional)
+    :return: Dictionary of grouped genes
     """
     species_ids = species_ids or get_species_in_genesets(geneset_ids)
-    homolog_data = homolog_data or get_homologs_for_geneset(geneset_ids, species_ids)
-    return group_homologs(homolog_data, species_ids)
+    gene_data = gene_data or get_homologs_for_geneset(geneset_ids, species_ids)
+    return group_homologs(gene_data, species_ids)
 
 def get_species_in_genesets(geneset_ids):
     species_ids = set()
@@ -127,27 +147,30 @@ def get_species_in_genesets(geneset_ids):
         species_ids.add(gene_data["object"]["geneset"]["species_id"])
     return list(species_ids)
 
-def cluster_genes(homolog_data, species_ids):
+def cluster_genes(gene_data, species_ids):
     """
-    Cluster result genes based on shared and unique genes per species
-    This will be placed in a d3 graph on the site
+    Cluster result genes based on shared and unique genes per species.
+    This will be placed in a d3 graph on the site.
 
     It will report:
     A. the number of genes unique to each species
     B. the number of genes/species/intersection
     C. the number of genes per species
-    :param homolog_data:
-    :param species_ids:
-    :return:
+    
+    :param gene_data: The list of gene data tuples
+    :param species_ids: List of species IDs
+    :return: Dictionary of genes per geneset
     """
     genes_per_geneset = {sp: {'unique': [], 'intersection': [], 'species': []} for sp in species_ids}
 
-    for homolog in homolog_data:
-        species_id = homolog[3]  # Get the species ID
-        gene_id = homolog[1]     # Get the gene ID
+    # First, collect all genes by species
+    for gene in gene_data:
+        species_id = gene[3]  # Get the species ID
+        gene_id = gene[1]     # Get the gene ID
         if species_id in genes_per_geneset:  # Only process if we know about this species
             genes_per_geneset[species_id]['species'].append(gene_id)
 
+    # Find unique genes for each species
     gene_comparision_list_all = []
     gene_comparision_list_sp = []
     for outer_species_id in species_ids:
@@ -161,7 +184,7 @@ def cluster_genes(homolog_data, species_ids):
         del gene_comparision_list_all[:]
         del gene_comparision_list_sp[:]
 
-    # Loop through this set to find all genes that appear in another species
+    # Find intersection genes (genes that appear in multiple species)
     gene_intersection_list = []
     for i in range(0, len(species_ids)):
         for j in range(0, len(genes_per_geneset[species_ids[i]]['species'])):
@@ -177,10 +200,11 @@ def cluster_genes(homolog_data, species_ids):
 
 def intersect(bool_results, at_least=2):
     """
-
-    :param bool_results:
-    :param at_least:
-    :return:
+    Find genes that appear in at least the specified number of genesets.
+    
+    :param bool_results: Dictionary of grouped genes
+    :param at_least: Minimum number of genesets a gene must appear in
+    :return: Dictionary of intersection results
     """
     bool_intersect = collections.defaultdict(dict)
     intersect_results = {key: value for key, value in bool_results.items() if len(value) >= int(at_least)}
@@ -192,7 +216,7 @@ def intersect(bool_results, at_least=2):
     gs_list = 'empty'
     for key, value in intersect_results.items():
         for i in range(0, len(value)):
-            gs_array.append(str(value[i][3]))
+            gs_array.append(str(value[i][3]))  # Add geneset ID
             gs_list = "|".join(gs_array)
         compare[gs_list].append(key)
         del gs_array[:]
@@ -201,7 +225,6 @@ def intersect(bool_results, at_least=2):
     i = 0
     for key, value in compare.items():
         for j in range(0, len(value)):
-            # bool_intersect[i] = {}
             local_array = []
             for k, v in intersect_results.items():
                 del local_array[:]
@@ -227,12 +250,11 @@ def intersect(bool_results, at_least=2):
 
 def bool_except(bool_results):
     """
-
-    :param bool_results:
-    :param intersection_sizes:
-    :return:
+    Find genes that appear in only one geneset (not in intersections).
+    
+    :param bool_results: Dictionary of grouped genes
+    :return: Dictionary of except results
     """
-
     bool_except = collections.defaultdict(dict)
     intersects = {key: value for key, value in bool_results.items() if len(value) >= int(2)}
 
@@ -256,11 +278,3 @@ def bool_except(bool_results):
                     bool_except[i][value[j]] = v
         i += 1
     return bool_except
-
-
-def create_circle_code(bool_results):
-    gps = collections.defaultdict(list)
-    for key, value in bool_results.items():
-        for k in bool_results[key]:
-            gps[key].append(k[3])
-    return gps

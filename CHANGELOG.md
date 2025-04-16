@@ -13,3 +13,7 @@ Kishan - Added additional checks for fetching genesets
 Kishan - MSET V2-dev - inegrated fetching genes symbols from geneset id api
 Kishan - Updated the code to accept and process two background files
 Kishan - Added doc strings to geneset api,   and updated import, Rearrange utils and apis file structure for easy extension
+Kishan - Made MSET more modularised and added test case using genesetID, now has an option to extend efffeciency if required(Has basic parallel processing setup)
+Harshit - Boolean Algebra v0.2, updated RestApi file to fetch homologs
+Harshit - Updated tools.yaml, Boolean Algebra tool for intra-species computation
+Harshit - Modified fastapiservice and ats for Boolean tool

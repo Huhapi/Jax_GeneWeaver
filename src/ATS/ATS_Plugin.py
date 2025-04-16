@@ -40,15 +40,18 @@ class implement_plugins():
         """
 
         LOADED_PLUGINS = self.load_plugins()
+        print("tools input: ",input["tools_input"])
         # Get specified plugin to run via input key "tool_type" representing the exact class name as a string in input dictionary
-        if input["tools_input"] == "MSET":
-            self.instance = LOADED_PLUGINS.get("MSETTask",None)
+        self.instance = LOADED_PLUGINS.get(input["tools_input"])
+        
+        if input["tools_input"] == "MSET":     
+                self.instance = LOADED_PLUGINS.get("MSETTask",None)
         
         if self.instance:
-            print("Failed to load instance.")
             # Run the selected class with the input information.
             return self.instance.run(input)
-        #else:
+        else:
+            print("Failed to load instance.")
             #Return a JSON failure object with information
 
     @abstractmethod

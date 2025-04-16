@@ -2,8 +2,8 @@
 Tool Class Definition for Boolean Algebra. See service.py for the heavy lifting.
 """
 import json
-import service
-from src.ATS import ATS_Plugin
+from plugins.BooleanAlgebra import service
+from ATS import ATS_Plugin
 from dataclasses import dataclass
 from typing import Any, Dict
 
@@ -112,10 +112,10 @@ class BooleanAlgebra(ATS_Plugin.implement_plugins):
             'bool_results': bool_results,
         })
 
-        # Circles are only displayed if there are less than 10 genesets
-        if 1 <= len(result_geneset_ids) <= 10:
-            result_dict['groups'] = service.create_circle_code(bool_results)
-
+    
+        # Initialize intersection_sizes as empty
+        intersection_sizes = {}
+        
         if relation != 'union':
             self._update_status("Computing intersection")
             # In case of Intersect, create dictionary of only
@@ -137,7 +137,32 @@ class BooleanAlgebra(ATS_Plugin.implement_plugins):
         # A. the number of genes unique to each species
         # B. the number of genes/species/intersection
         # B. the number of genes per species
-        result_dict['bool_cluster'] = service.cluster_genes(homolog_data, species_in_genesets)
+        bool_cluster_raw = service.cluster_genes(homolog_data, species_in_genesets)
+        
+        # Convert bool_cluster to only include counts instead of actual gene values
+        bool_cluster_counts = {}
+        for species_id, data in bool_cluster_raw.items():
+            bool_cluster_counts[species_id] = {
+                'unique': len(data['unique']),
+                'species': len(data['species'])
+            }
+            
+            # Calculate the correct intersection count based on intersection_sizes
+            if intersection_sizes:
+                # Count the total number of genes in all intersection groups
+                total_intersection_genes = 0
+                for size, group in intersection_sizes.items():
+                    # Count the number of genes in each group
+                    for gene_id, gene_data in group.items():
+                        total_intersection_genes += 1
+                
+                # Set the intersection count for this species
+                bool_cluster_counts[species_id]['intersection'] = total_intersection_genes
+            else:
+                # If no intersection_sizes (e.g., for union operation), use the raw intersection count
+                bool_cluster_counts[species_id]['intersection'] = len(data['intersection'])
+        
+        result_dict['bool_cluster'] = bool_cluster_counts
 
         # Update the results of the tool
         self._results.update(result_dict)
@@ -149,3 +174,4 @@ class BooleanAlgebra(ATS_Plugin.implement_plugins):
 
     def status(self) -> Response:
         return Response(result=self._status)
+
