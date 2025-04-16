@@ -1,0 +1,31 @@
+tools:
+  MSET: plugins.MSET.MSET.MSETTask
+  Boolean: plugins.BooleanAlgebra.BA.BooleanAlgebra
+tools_input:
+  MSET:
+    - name: num_trials
+      type: int
+    - name: print_to_cli
+      type: bool
+    - name: file_path_1
+      type: UploadFile
+    - name: file_path_2
+      type: UploadFile
+    - name: geneset_id_1
+      type: str
+    - name: geneset_id_2
+      type: str
+    - name: background_file_path_1
+      type: UploadFile
+    - name: background_file_path_2
+      type: UploadFile
+
+  Boolean:
+    - name: geneset_ids
+      type: List<str>
+    - name: relation
+      type: str
+    - name: at_least
+      type: int
+    - name: print_to_cli
+      type: bool
