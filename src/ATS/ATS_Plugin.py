@@ -46,6 +46,9 @@ class implement_plugins():
         
         if input["tools_input"] == "MSET":     
                 self.instance = LOADED_PLUGINS.get("MSETTask",None)
+
+        if input["tools_input"]=="Boolean":
+            self.instance= LOADED_PLUGINS.get("BooleanAlgebra",None)
         
         if self.instance:
             # Run the selected class with the input information.
