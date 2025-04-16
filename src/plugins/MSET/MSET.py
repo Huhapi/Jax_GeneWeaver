@@ -44,7 +44,7 @@ class MSETTask(ATS_Plugin.implement_plugins):
                 content1 = f.read()
             group_1_genes = extract_genes_from_gw(content1)
         else:
-            return Response(result="Error: Provide either file_path_1 or geneset_id_1")
+            return Response(result={"Error": "Provide either file_path_1 or geneset_id_1"})
 
         # Retrieve gene set for group 2
         if geneset_id_2:
@@ -54,7 +54,7 @@ class MSETTask(ATS_Plugin.implement_plugins):
                 content2 = f.read()
             group_2_genes = extract_genes_from_gw(content2)
         else:
-            return Response(result="Error: Provide either file_path_2 or geneset_id_2")
+            return Response(result={"Error": "Provide either file_path_2 or geneset_id_2"})
 
         self._update_status(percent=30, message="Processing background gene sets", current_step="Background Processing", log=log)
 
@@ -131,7 +131,7 @@ class MSETTask(ATS_Plugin.implement_plugins):
             alternative = "Less"
             method = "Under"
         else:
-            return Response(result="Error: representation must be either 'over' or 'under'")
+            return Response(result= {"Error": "representation must be either 'over' or 'under'"})
         
         # Histogram of the intersection sizes.
         hist = dict(Counter(trials))
@@ -179,4 +179,4 @@ class MSETTask(ATS_Plugin.implement_plugins):
         Returns:
             Response: Object containing the progress and message.
         """
-        return Response(result=self._status)
+        return Response(result={"status":self._status})

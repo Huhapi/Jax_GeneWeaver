@@ -1,10 +1,12 @@
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
-
+import json
 @dataclass
 class Response:
-    result: Any
-
+    result: Dict
+    def to_JSON(self):
+        return json.dumps(self.result)
+    
 @dataclass
 class MSETOutput:
     list_1_size: int
@@ -19,6 +21,11 @@ class MSETOutput:
     trials_gt_intersect: int
     p_value: float
     histogram: Dict[int, int]
+    #def to_Dict(self):
+        #return {
+            #"list_1_size": self.list_1_size,
+
+        #}
 
 @dataclass
 class MSETStatus:

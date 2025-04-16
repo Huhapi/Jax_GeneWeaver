@@ -1,12 +1,10 @@
 # Unit testing for Boolean Algebra
-from plugins.BooleanAlgebra import BA, service
 import asyncio
 import json
 from ATS import ATS_Plugin
 
 if __name__ == "__main__":
     async def test():
-        ba = BA.BooleanAlgebra()
         
         operations = "intersect"
         at_least_values =  2
@@ -26,6 +24,5 @@ if __name__ == "__main__":
         with open('output' + '.json', 'w') as fp:
             json.dump(result.result, fp)
         print(result.result)
-        print(f"\nStatus: {ba.status().result}")
     
     asyncio.run(test())
