@@ -67,16 +67,22 @@ class MSETTask(ATS_Plugin.implement_plugins):
 
         # Process background gene sets if provided
         if background_file_path_1:
-            with open(background_file_path_1, "r") as f:
-                background_content_1 = f.read()
-            background_genes_1 = sorted(set(extract_bg_genes(background_content_1)))
+            try:
+                with open(background_file_path_1, "r") as f:
+                    background_content_1 = f.read()
+                background_genes_1 = sorted(set(extract_bg_genes(background_content_1)))
+            except Exception as e:
+                return Response(result={"Error": f"Failed to read background_file_path_1: {str(e)}"})
         else:
             background_genes_1 = None
 
         if background_file_path_2:
-            with open(background_file_path_2, "r") as f:
-                background_content_2 = f.read()
-            background_genes_2 = sorted(set(extract_bg_genes(background_content_2)))
+            try:
+                with open(background_file_path_2, "r") as f:
+                    background_content_2 = f.read()
+                background_genes_2 = sorted(set(extract_bg_genes(background_content_2)))
+            except Exception as e:
+                return Response(result={"Error": f"Failed to read background_file_path_2: {str(e)}"})
         else:
             background_genes_2 = None
 
