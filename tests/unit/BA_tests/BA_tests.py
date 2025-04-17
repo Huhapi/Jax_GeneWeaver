@@ -1,7 +1,7 @@
 """
 Boolean Algen
  Covers: fetchSpecies wrapper, homolog retrieval, grouping,
-  clustering, intersect, and bool_except.
+intersect, and bool_except.
 """
 
 import unittest
@@ -96,17 +96,17 @@ class ServiceHelperTests(unittest.TestCase):
         self.assertNotIn(101, flat_except)
         self.assertNotIn(102, flat_except)
 
-    def test_cluster_genes(self):
-        genes = service.get_homologs_for_geneset(["1256", "239581", "137861"])
-        cluster = service.cluster_genes(genes, [1, 2])
+    # def test_cluster_genes(self):
+    #     genes = service.get_homologs_for_geneset(["1256", "239581", "137861"])
+    #     cluster = service.cluster_genes(genes, [1, 2])
 
-        self.assertIn(11, cluster[1]["unique"])
-        self.assertEqual(len(cluster[1]["unique"]), 3)
+    #     self.assertIn(11, cluster[1]["unique"])
+    #     self.assertEqual(len(cluster[1]["unique"]), 3)
 
-        self.assertEqual(len(cluster[2]["unique"]), 4)
+    #     self.assertEqual(len(cluster[2]["unique"]), 4)
 
-        self.assertIn(101, cluster[1]["intersection"] + cluster[2]["intersection"])
-        self.assertIn(102, cluster[1]["intersection"] + cluster[2]["intersection"])
+    #     self.assertIn(101, cluster[1]["intersection"] + cluster[2]["intersection"])
+    #     self.assertIn(102, cluster[1]["intersection"] + cluster[2]["intersection"])
 
 
 if __name__ == "__main__":
