@@ -36,7 +36,7 @@ def edge_case_MSET_test():
 
 def mid_case_MSET_test():
     """
-    Testing a p value of one case for MSET.
+    Testing a p value of approximately .5 case for MSET.
 
     """
     current_dir = os.path.dirname(__file__)
@@ -67,6 +67,9 @@ def mid_case_MSET_test():
 
 
 def first_run_check():
+    """
+    This is also the test for p=0.
+    """
     # This fetches the current directory and backtracks the file paths from there, please dont modify 
     current_dir = os.path.dirname(__file__)
 
