@@ -23,6 +23,7 @@ if __name__ == "__main__":
                 
         with open('output' + '.json', 'w') as fp:
             json.dump(result.result, fp)
+            
         print(result.result)
     
     asyncio.run(test())

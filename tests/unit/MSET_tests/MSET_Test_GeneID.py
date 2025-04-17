@@ -24,7 +24,8 @@ async def run_task_with_monitoring():
         "geneset_id_2": geneset_id_2,
         "background_file_path_1": background_file_path,
         "background_file_path_2": background_file_path,
-        "print_to_cli": True
+        "print_to_cli": True,
+        "log":True
     }
 
     task = MSET.MSETTask()

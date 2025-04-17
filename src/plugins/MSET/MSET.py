@@ -5,7 +5,7 @@ from dataclasses import asdict
 from typing import Any, Dict, List, Optional
 from ATS import ATS_Plugin
 from plugins.api.geneSetRestAPI import fetchGeneSymbols_from_geneset
-from utils.gene_helpers import extract_genes_from_gw
+from utils.gene_helpers import extract_genes_from_gw, extract_bg_genes
 from plugins.MSET.schemas import Response, MSETOutput, MSETStatus
 from plugins.MSET.simulation import run_trials   # Heavy simulation moved to its own module
 
@@ -17,9 +17,16 @@ class MSETTask(ATS_Plugin.implement_plugins):
     """  
 
     def __init__(self):
+        """Initializing status message."""
         self._status = MSETStatus(percent_complete=0, message="Initializing", current_step="")
 
     async def run(self, input_data: Dict[str, Any]) -> Response:
+        """
+        run function executes the MSET tool on specified input.
+
+        input: Dictionary values matching requirements for tool.
+        
+        """
         log = input_data.get("log")
         # Get parameters from input_data
         num_trials = int(input_data.get("num_trials", 1000))
@@ -62,14 +69,14 @@ class MSETTask(ATS_Plugin.implement_plugins):
         if background_file_path_1:
             with open(background_file_path_1, "r") as f:
                 background_content_1 = f.read()
-            background_genes_1 = sorted(set(extract_genes_from_gw(background_content_1)))
+            background_genes_1 = sorted(set(extract_bg_genes(background_content_1)))
         else:
             background_genes_1 = None
 
         if background_file_path_2:
             with open(background_file_path_2, "r") as f:
                 background_content_2 = f.read()
-            background_genes_2 = sorted(set(extract_genes_from_gw(background_content_2)))
+            background_genes_2 = sorted(set(extract_bg_genes(background_content_2)))
         else:
             background_genes_2 = None
 

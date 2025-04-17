@@ -1,0 +1,31 @@
+# This metadata batch upload is created by a GeneWeaver.org export geneset batch script.
+# 2025-03-30 03:38:03.186807
+#
+# The format of this file is described online at:
+#    http://geneweaver.org/index.php?action=manage&cmd=batchgeneset
+# Which is the same page that it can be submitted to.
+#
+: Apoptosis
+= KEGG Geneset - "Apoptosis" pathway genes
++ Kyoto Encyclopedia of Genes and Genomes (KEGG) Geneset. This geneset contains genes that participate in the "Apoptosis" pathway. This set was automatically constructed using the KEGG API and enumerating all rat pathways.
+gene2kegg v. 0.1.1
+Last updated 2015.09.10
+A Public
+! Q-Value < 1
+@ Rattus norvegicus
+% Gene Symbol
+
+CANP 1	1.00000000000000000000
+muCANP	1.00000000000000000000
+Capn2	1.00000000000000000000
+Casp3	1.00000000000000000000
+CPP32-beta	1.00000000000000000000
+Lice	1.00000000000000000000
+Yama	1.00000000000000000000
+Cycs	1.00000000000000000000
+CYCSA	1.00000000000000000000
+Cyct	1.00000000000000000000
+CYCTA	1.00000000000000000000
+Il1a	1.00000000000000000000
+IL-1 alpha	1.00000000000000000000
+IL-1F1	1.00000000000000000000
