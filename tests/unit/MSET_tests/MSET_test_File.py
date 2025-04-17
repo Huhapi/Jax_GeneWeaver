@@ -27,7 +27,7 @@ def edge_case_MSET_test():
     }
 
     # Create an instance of the plugin task and run it asynchronously.
-    task = MSET.MSETTask()
+    task = MSET.MSET()
     result = asyncio.run(task.run(input_data))
     
     # Print the final result.
@@ -57,7 +57,7 @@ def mid_case_MSET_test():
     }
 
     # Create an instance of the plugin task and run it asynchronously.
-    task = MSET.MSETTask()
+    task = MSET.MSET()
     result = asyncio.run(task.run(input_data))
     
     # Print the final result.
@@ -90,7 +90,7 @@ def first_run_check():
     }
     
     # Create an instance of the plugin task and run it asynchronously.
-    task = MSET.MSETTask()
+    task = MSET.MSET()
     result = asyncio.run(task.run(input_data))
     
     # Print the final result.

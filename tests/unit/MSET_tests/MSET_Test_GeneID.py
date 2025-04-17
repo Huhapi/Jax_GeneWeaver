@@ -28,7 +28,7 @@ async def run_task_with_monitoring():
         "log":True
     }
 
-    task = MSET.MSETTask()
+    task = MSET.MSET()
     
     task_future = asyncio.create_task(task.run(input_data))
     status_monitor = asyncio.create_task(monitor_status(task))

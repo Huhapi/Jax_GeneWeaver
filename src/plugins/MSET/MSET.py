@@ -9,7 +9,7 @@ from utils.gene_helpers import extract_genes_from_gw, extract_bg_genes
 from plugins.MSET.schemas import Response, MSETOutput, MSETStatus
 from plugins.MSET.simulation import run_trials   # Heavy simulation moved to its own module
 
-class MSETTask(ATS_Plugin.implement_plugins):
+class MSET(ATS_Plugin.implement_plugins):
     """
     A plugin for performing Modular Single-set Enrichment Test (MSET).
     MSET was developed to compare gene lists. From four character lists (gene_list1, gene_list2, background1, background2), 

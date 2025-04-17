@@ -6,7 +6,6 @@
 from typing import Any, Dict
 from abc import abstractmethod
 import importlib.metadata
-import asyncio
 
 class implement_plugins():
     def __init__(self):
@@ -33,7 +32,7 @@ class implement_plugins():
                 print(f"Warning: {ep.name} does not conform to plugin interface.")
         return plugins
         
-    def execute(self, input):
+    async def execute(self, input):
         """ This function executes the loading of the plugins and calls the one specified in the input.
         
         input: The JSON input from the frontend interface.
@@ -43,21 +42,16 @@ class implement_plugins():
 
         LOADED_PLUGINS = self.load_plugins()
 
-        # Get specified plugin to run via input key "tool_type" representing the exact class name as a string in input dictionary
+        # Get specified plugin via input key "tool_type" representing the exact class name as a string in input dictionary
         self.instance = LOADED_PLUGINS.get(input["tools_input"])
-        
-        if input["tools_input"] == "MSET":     
-                self.instance = LOADED_PLUGINS.get("MSETTask",None)
-
-        if input["tools_input"]=="Boolean":
-            self.instance= LOADED_PLUGINS.get("BooleanAlgebra",None)
         
         if self.instance:
             # Run the selected class with the input information.
-            return self.instance.run(input)
+            return await self.instance.run(input)
         else:
-            print("Failed to load instance.")
-            #Return a JSON failure object with information
+            #Return Dictionary object which is serializable.
+            return {"error":"Failed to load instance."}
+            
 
     @abstractmethod
     def run(self, input_data: Dict[str, Any]):
@@ -79,5 +73,5 @@ class implement_plugins():
         if self.instance:
             return self.instance.status()
         else:
-            return {"status": "Instance not yet initialized."} # This needs to be an error object.
+            return {"status": "Instance not yet initialized."} # Dictionary object, serializable
 

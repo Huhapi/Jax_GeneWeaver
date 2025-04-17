@@ -1,6 +1,7 @@
 from ATS import ATS_Plugin
 import os
 from plugins.MSET import MSET
+import asyncio
 
 def test_load_plugins():
     imp = ATS_Plugin.implement_plugins()
@@ -9,16 +10,17 @@ def test_load_plugins():
     for plug,object in enumerate(plugins):
         print("plug:",plug)
         print("obj:",plugins[object])
-        if isinstance(plugins[object],MSET.MSETTask):
+        if isinstance(plugins[object],MSET.MSET):
             print("MSET comparison success.")
     print(plugins)
 
-def test_execute(input):
+async def test_execute(input):
     imp = ATS_Plugin.implement_plugins()
-    imp.execute(input)
+    await imp.execute(input)
 
 
-if __name__ == "__main__":
+async def get_info_and_execute():
+
     this_file = os.path.abspath(__file__)
     project_root = os.path.abspath(os.path.join(this_file, "..", "..", "..", ".."))
 
@@ -35,10 +37,14 @@ if __name__ == "__main__":
         "background_file_path": background_file_path,
         "print_to_cli": True
     }
-
     test_load_plugins()
-    test_execute(input_data)
+    await test_execute(input_data)
 
+if __name__ == "__main__":
+    asyncio.run(get_info_and_execute())
+
+
+    
         # Code for dynamically calling plugins via yaml file.
 
         # tools_yaml_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tools.yaml")

@@ -90,7 +90,7 @@ twine = "^4.0"
 
 [tool.poetry.plugins."jax.ats.plugins"]
 
-"MSET" = "plugins.MSET.MSET:MSETTask"  # This is: path.to.file : class name
+"MSET" = "plugins.MSET.MSET:MSET"  # This is: path.to.file : class name
 "BooleanAlgebra" = "plugins.BooleanAlgebra.BA:BooleanAlgebra"  # This is: path.to.file : class name
 
 [tool.poetry.urls]
