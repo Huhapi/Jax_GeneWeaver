@@ -15,7 +15,7 @@ def main() -> None:
         print(f"No entry points found for group {GROUP}")
         return
 
-    print(f"👍  Found {len(eps)} entry point(s) in '{GROUP}':")
+    print(f"Found {len(eps)} entry point(s) in '{GROUP}':")
     for ep in eps:
         try:
             cls = ep.load()        # import the class
