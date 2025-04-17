@@ -1,6 +1,8 @@
 # Daniel, Anushka, Harshit, Kishan
-# First attempt at factory method for plugin implementation
-# Add pyYAML to dependencies
+# Core implementations of of the tool plugins
+# Loads the plugin classes through the entry point in the pyproject.toml file.
+# Executes the plugin based on the input matching the tool class.
+
 from typing import Any, Dict
 from abc import abstractmethod
 import importlib.metadata
@@ -67,8 +69,15 @@ class implement_plugins():
         pass
     # Get status class for front end interface call
     def get_status(self):
+        """
+        Gets the status of the instantiated tool.
+        
+        input: No input, the instantiated tool class is saved in self.instance
+        
+        returns: The tools status() response
+        """
         if self.instance:
             return self.instance.status()
         else:
-            return "Initializing" # This needs to be an error object.
+            return {"status": "Instance not yet initialized."} # This needs to be an error object.
 
