@@ -1,9 +1,7 @@
 import asyncio
-import importlib
 import os,shutil
 from typing import Literal, Optional, List, Callable
 from threading import Thread, Lock
-import time
 import uuid, inspect
 
 import starlette.datastructures
@@ -14,7 +12,7 @@ from ATS import ATS_Plugin
 import yaml
 from fastapi import FastAPI, UploadFile, File, Form, Depends
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class LoadPluginModel(BaseModel):
@@ -143,21 +141,6 @@ async def load_plugin(input: LoadPluginModel=Depends(parse_metadata),files: Opti
         # Retrieve plugin class instance
         imp_plugins = ATS_Plugin.implement_plugins()
 
-        # tools_yaml_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools.yaml")
-        # with open(tools_yaml_path, "r") as file:
-        #     config=yaml.safe_load(file)
-        # tool_type = input.tool_type
-        # className=config["tools"].get(tool_type)
-        # print(className)
-        # if className:
-        #     module_path, class_name = className.rsplit(".", 1)
-        #     module = importlib.import_module(module_path)
-        #     cls = getattr(module, class_name)
-        #     print(cls)
-        #     if cls:
-        #         print(bgUpFiles)
-        #         print(upFiles)
-        #         imp_plugins = cls()
         if imp_plugins:
             toolInput=constructInput(input,bgUpFiles,upFiles)
             task_id=task_manager.create_task(imp_plugins,toolInput)
