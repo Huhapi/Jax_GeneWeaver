@@ -62,6 +62,17 @@ class MSET(ATS_Plugin.implement_plugins):
             group_2_genes = extract_genes_from_gw(content2)
         else:
             return Response(result={"Error": "Provide either file_path_2 or geneset_id_2"})
+        
+        # Validate that each group has either a Geneset ID or a file path
+        missing = []
+        if not geneset_id_1 or not file_path_1:
+            missing.append("group 1")
+        if not geneset_id_2 or not file_path_2:
+            missing.append("group 2")
+        if missing:
+            groups = " and ".join(missing)
+            return Response(result={"Error": f"Please provide geneset_id or file_path for {groups}"})
+
 
         self._update_status(percent=30, message="Processing background gene sets", current_step="Background Processing", log=log)
 
