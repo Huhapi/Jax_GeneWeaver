@@ -37,4 +37,4 @@ Appendix: (Documents, etc.)
 
 [Software Design Document (Initial Version) ](https://docs.google.com/document/d/1iV7gFUhqc2Z5BtbLYyuZjCIfEyceMhUscrIj2UMRTug/edit?tab=t.0)
 
-[Software Testing Document - Planning Version](https://docs.google.com/document/d/1Lk9_93cKM9bXzYuGziVMOhecGJTzI2oFd0pS3NMt780/edit?usp=sharing)
+[Software Testing Document](https://docs.google.com/document/d/1Lk9_93cKM9bXzYuGziVMOhecGJTzI2oFd0pS3NMt780/edit?usp=sharing)
