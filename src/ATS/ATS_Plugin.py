@@ -68,7 +68,7 @@ class implement_plugins():
         
         input: No input, the instantiated tool class is saved in self.instance
         
-        returns: The tools status() response
+        returns: The tools status() response or a status message "Instance not yet initialized." if there is no instance.
         """
         if self.instance:
             return self.instance.status()
