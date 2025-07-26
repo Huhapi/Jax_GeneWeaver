@@ -28,13 +28,15 @@ classifiers = [
 ]
 [tool.poetry.dependencies]
 
-python = "^3.10"
-
+python = "^3.11"
+uvicorn = "^0.29.0"
 jax-apiutils = "*"
 pyyaml = "^6.0.2"
 requests = "^2.32.3"
 fastapi = ">=0.95.0"
 matplotlib = "^3.10.1"
+starlette = "^0.37.2"
+python-multipart = "^0.0.6"
 
 [tool.poetry.group.dev]
 optional = true

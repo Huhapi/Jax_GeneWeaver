@@ -47,8 +47,12 @@ class MSET(ATS_Plugin.implement_plugins):
         if geneset_id_1:
             group_1_genes = fetchGeneSymbols_from_geneset(geneset_id_1)
         elif file_path_1:
-            with open(file_path_1, "r") as f:
-                content1 = f.read()
+            try:
+                with open(file_path_1, "r") as f:
+                    print(file_path_1)
+                    content1 = f.read()
+            except FileNotFoundError:
+                return Response(result={"Error": "file_path_1 incorrect."}) 
             group_1_genes = extract_genes_from_gw(content1)
         else:
             return Response(result={"Error": "Provide either file_path_1 or geneset_id_1"})
@@ -57,17 +61,21 @@ class MSET(ATS_Plugin.implement_plugins):
         if geneset_id_2:
             group_2_genes = fetchGeneSymbols_from_geneset(geneset_id_2)
         elif file_path_2:
-            with open(file_path_2, "r") as f:
-                content2 = f.read()
+            print(file_path_2)
+            try:
+                with open(file_path_2, "r") as f:
+                    content2 = f.read()
+            except FileNotFoundError:
+                return Response(result={"Error": "file_path_2 incorrect."}) 
             group_2_genes = extract_genes_from_gw(content2)
         else:
             return Response(result={"Error": "Provide either file_path_2 or geneset_id_2"})
-        
+
         # Validate that each group has either a Geneset ID or a file path
         missing = []
-        if not geneset_id_1 or not file_path_1:
+        if not geneset_id_1 and not file_path_1:
             missing.append("group 1")
-        if not geneset_id_2 or not file_path_2:
+        if not geneset_id_2 and not file_path_2:
             missing.append("group 2")
         if missing:
             groups = " and ".join(missing)

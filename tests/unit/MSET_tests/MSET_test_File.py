@@ -98,5 +98,7 @@ def first_run_check():
     print(result.result)
 
 if __name__ == "__main__":
+    #first_run_check()
     mid_case_MSET_test()
     #edge_case_MSET_test()
+    
